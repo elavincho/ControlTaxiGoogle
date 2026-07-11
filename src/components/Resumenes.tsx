@@ -3,20 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { getStoredViajes, getStoredCombustible, getStoredMantenimiento, getStoredMonotributo, getStoredSeguro, calculateSummary, filterByRange, getTodayDateString } from '../utils/storage';
+import React, { useState, useEffect } from 'react';
+import { calculateSummary, filterByRange, getTodayDateString } from '../utils/storage';
 import { Viaje, GastoCombustible, Mantenimiento, MonotributoRecord, SeguroRecord } from '../types';
 import { 
+  getViajes,
+  getCombustible,
+  getMantenimiento,
+  getMonotributo,
+  getSeguro
+} from '../utils/api';
+import { 
   DollarSign, 
-  TrendingUp, 
-  Wrench, 
   Calendar, 
-  Fuel, 
-  ChevronRight, 
-  Gauge, 
-  Compass, 
   Activity,
-  ArrowRight
+  Loader2
 } from 'lucide-react';
 
 interface ResumenesProps {
@@ -27,12 +28,54 @@ export default function Resumenes({ userId }: ResumenesProps) {
   const REFERENCE_DATE = getTodayDateString();
   const [selectedDailyDate, setSelectedDailyDate] = useState(REFERENCE_DATE);
 
-  // Load all user data
-  const viajes = getStoredViajes(userId);
-  const combustibles = getStoredCombustible(userId);
-  const mantenimientos = getStoredMantenimiento(userId);
-  const monotributos = getStoredMonotributo(userId);
-  const seguros = getStoredSeguro(userId);
+  // States for datasets
+  const [viajes, setViajes] = useState<Viaje[]>([]);
+  const [combustibles, setCombustibles] = useState<GastoCombustible[]>([]);
+  const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
+  const [monotributos, setMonotributos] = useState<MonotributoRecord[]>([]);
+  const [seguros, setSeguros] = useState<SeguroRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    const loadData = () => {
+      Promise.all([
+        getViajes(userId),
+        getCombustible(userId),
+        getMantenimiento(userId),
+        getMonotributo(userId),
+        getSeguro(userId)
+      ])
+        .then(([vList, cList, mList, mtList, sList]) => {
+          if (active) {
+            setViajes(vList);
+            setCombustibles(cList);
+            setMantenimientos(mList);
+            setMonotributos(mtList);
+            setSeguros(sList);
+          }
+        })
+        .catch((err) => console.error("Error loading summaries:", err))
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    };
+
+    loadData();
+
+    const handleStorageUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener('storage-update', handleStorageUpdate);
+
+    return () => {
+      active = false;
+      window.removeEventListener('storage-update', handleStorageUpdate);
+    };
+  }, [userId]);
 
   // Map fechaPago to fecha for compatibility with filterByRange
   const monotributosMapped = monotributos.map(m => ({ ...m, fecha: m.fechaPago }));
@@ -64,6 +107,15 @@ export default function Resumenes({ userId }: ResumenesProps) {
   const totalSeguroDia = segurosDia.reduce((sum, s) => sum + s.importe, 0);
   const totalGastosDiaFinal = dailyStats.gastosTotales + totalMonotributoDia + totalSeguroDia;
   const gananciaNetaDiaFinal = dailyStats.ingresosTotales - totalGastosDiaFinal;
+
+  if (loading && viajes.length === 0) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4" id="resumenes-loading">
+        <Loader2 className="h-8 w-8 text-yellow-500 animate-spin" />
+        <p className="text-xs text-slate-400 font-mono font-bold uppercase tracking-widest">Cargando auditoría financiera...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 font-sans pb-12" id="resumenes-view">
