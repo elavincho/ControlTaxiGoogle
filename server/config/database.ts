@@ -44,7 +44,7 @@ const connectDB = async () => {
 
   try {
     // Add a connection timeout to avoid blocking requests indefinitely in case of network issues
-    await mongoose.connect(mongodbUri!, {
+    await mongoose.connect(mongodbUri, {
       serverSelectionTimeoutMS: 3000, // 3 seconds timeout
     });
     console.log('MongoDB conectado correctamente');

@@ -21,9 +21,21 @@ app.use(express.json());
 app.use(async (req, res, next) => {
   try {
     await connectDB();
+    // Verify connection state
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("La conexión de Mongoose no está activa (readyState: " + mongoose.connection.readyState + ")");
+    }
     next();
   } catch (err: any) {
     console.error("Database connection middleware error:", err.message);
+    
+    // On Vercel or Production, fail fast with a highly descriptive error so the user knows what's wrong
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+      return res.status(500).json({ 
+        error: `Error de conexión con MongoDB: ${err.message}. Asegúrate de haber configurado la variable de entorno MONGODB_URI en Vercel y de haber habilitado el acceso desde cualquier IP (0.0.0.0/0) en la sección Network Access de MongoDB Atlas.` 
+      });
+    }
+    
     next();
   }
 });
