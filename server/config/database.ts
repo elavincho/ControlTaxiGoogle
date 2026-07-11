@@ -9,7 +9,7 @@ const connectDB = async () => {
     return;
   }
 
-  const mongodbUri = process.env.MONGODB_URI || "mongodb://localhost:27017/taxi-control";
+  const mongodbUri = process.env.MONGODB_URI || "";
 
   try {
     await mongoose.connect(mongodbUri);
