@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { getStoredUsers, encryptPassword } from '../utils/storage';
+import { encryptPassword } from '../utils/storage';
 import { registerUser } from '../utils/api';
 import { UserProfile } from '../types';
 import { User, Mail, Phone, Lock, KeyRound, AlertTriangle, CheckCircle, ArrowLeft, ShieldAlert, Sparkles } from 'lucide-react';
@@ -65,21 +65,6 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
 
     if (password !== confirmPassword) {
       setErrorMsg('Las contraseñas no coinciden.');
-      return;
-    }
-
-    const users = getStoredUsers();
-
-    // Check availability
-    const isEmailTaken = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-    if (isEmailTaken) {
-      setErrorMsg('Este correo electrónico ya está registrado.');
-      return;
-    }
-
-    const isUsernameTaken = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-    if (isUsernameTaken) {
-      setErrorMsg('Este nombre de usuario ya está tomado.');
       return;
     }
 

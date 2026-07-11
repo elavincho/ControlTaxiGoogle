@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile, FilterRange } from './types';
-import { initStorage, getStoredUsers, syncFromDBToLocalStorage } from './utils/storage';
+import { initStorage } from './utils/storage';
+import { getUserProfile } from './utils/api';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -57,6 +58,9 @@ export default function App() {
   const [activeScreen, setActiveScreen] = useState<string>('dashboard');
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [loadingSession, setLoadingSession] = useState<boolean>(() => {
+    return !!localStorage.getItem('taxi_session');
+  });
 
   // Global Sync Filter
   const [globalFilterRange, setGlobalFilterRange] = useState<FilterRange>('mes');
@@ -80,40 +84,30 @@ export default function App() {
     if (savedSession) {
       try {
         const userId = JSON.parse(savedSession);
-        const users = getStoredUsers();
-        const found = users.find(u => u.id === userId);
-        if (found) {
-          setCurrentUser(found);
-          setActiveScreen('dashboard');
-        }
+        getUserProfile(userId)
+          .then((user) => {
+            if (user) {
+              setCurrentUser(user);
+              setActiveScreen('dashboard');
+            } else {
+              localStorage.removeItem('taxi_session');
+            }
+          })
+          .catch((e) => {
+            console.warn("Session restore failed:", e);
+            localStorage.removeItem('taxi_session');
+          })
+          .finally(() => {
+            setLoadingSession(false);
+          });
       } catch (e) {
         localStorage.removeItem('taxi_session');
+        setLoadingSession(false);
       }
+    } else {
+      setLoadingSession(false);
     }
-
-    // Dynamic storage change sync helper
-    const handleStorageChange = () => {
-      if (currentUser) {
-        const users = getStoredUsers();
-        const found = users.find(u => u.id === currentUser.id);
-        if (found) {
-          setCurrentUser(found);
-        }
-      }
-    };
-
-    window.addEventListener('storage-update', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage-update', handleStorageChange);
-    };
   }, []);
-
-  // Sync with MongoDB whenever user session starts
-  useEffect(() => {
-    if (currentUser?.id) {
-      syncFromDBToLocalStorage(currentUser.id);
-    }
-  }, [currentUser?.id]);
 
   // --- INACTIVITY WATCHER ---
   useEffect(() => {
@@ -224,6 +218,16 @@ export default function App() {
   const handleAccountDeleted = () => {
     handleLogout();
   };
+
+  // If restoring session, show a polished spinner
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4" id="app-loading-screen">
+        <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-400 font-mono text-xs uppercase tracking-widest">Iniciando sistema...</p>
+      </div>
+    );
+  }
 
   // If not logged in, render Login or Register page
   if (!currentUser) {

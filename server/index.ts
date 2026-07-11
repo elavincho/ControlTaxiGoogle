@@ -19,10 +19,13 @@ app.use(express.json());
 
 // Ensure Database is connected for each request (crucial for Serverless Vercel warm starts)
 app.use(async (req, res, next) => {
+  const mongodbUri = process.env.MONGODB_URI;
+  const hasUri = mongodbUri && (mongodbUri.trim().startsWith("mongodb://") || mongodbUri.trim().startsWith("mongodb+srv://"));
+
   try {
     await connectDB();
-    // Verify connection state
-    if (mongoose.connection.readyState !== 1) {
+    // Verify connection state only if a MongoDB URI is configured
+    if (hasUri && mongoose.connection.readyState !== 1) {
       throw new Error("La conexión de Mongoose no está activa (readyState: " + mongoose.connection.readyState + ")");
     }
     next();

@@ -84,6 +84,15 @@ export async function deleteUserProfile(userId: string): Promise<boolean> {
   return true;
 }
 
+export async function getUserProfile(userId: string): Promise<UserProfile> {
+  const res = await fetch(`/api/users/${userId}`);
+  const user = await handleResponse(res, 'Error al cargar el perfil del usuario.');
+  if (user && user._id) {
+    user.id = user._id;
+  }
+  return user;
+}
+
 // --- VIAJES ---
 
 export async function getViajes(userId: string): Promise<Viaje[]> {

@@ -21,33 +21,7 @@ export function encryptPassword(password: string): string {
 
 // Initialize Storage if empty
 export function initStorage() {
-  if (!localStorage.getItem('taxi_users')) {
-    localStorage.setItem('taxi_users', JSON.stringify([]));
-  }
-  
-  if (!localStorage.getItem('taxi_viajes')) {
-    localStorage.setItem('taxi_viajes', JSON.stringify([]));
-  }
-  
-  if (!localStorage.getItem('taxi_combustible')) {
-    localStorage.setItem('taxi_combustible', JSON.stringify([]));
-  }
-  
-  if (!localStorage.getItem('taxi_mantenimiento')) {
-    localStorage.setItem('taxi_mantenimiento', JSON.stringify([]));
-  }
-  
-  if (!localStorage.getItem('taxi_alertas')) {
-    localStorage.setItem('taxi_alertas', JSON.stringify([]));
-  }
-
-  if (!localStorage.getItem('taxi_monotributo')) {
-    localStorage.setItem('taxi_monotributo', JSON.stringify([]));
-  }
-
-  if (!localStorage.getItem('taxi_seguro')) {
-    localStorage.setItem('taxi_seguro', JSON.stringify([]));
-  }
+  // Bypassed: we no longer store application data in local storage
 }
 
 // Low-level Getters/Setters with Background MongoDB Synchronizer
@@ -526,183 +500,51 @@ export async function syncSeguroToDB(localSeguros: SeguroRecord[], userId: strin
 }
 
 export async function syncFromDBToLocalStorage(userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const userRes = await fetch(`/api/users/${userId}`);
-    if (userRes.ok) {
-      const user = await userRes.json();
-      if (user) {
-        user.id = user._id;
-        const users = JSON.parse(localStorage.getItem('taxi_users') || '[]');
-        const updatedUsers = users.map((u: any) => u.id === userId ? user : u);
-        if (!users.some((u: any) => u.id === userId)) {
-          updatedUsers.push(user);
-        }
-        localStorage.setItem('taxi_users', JSON.stringify(updatedUsers));
-      }
-    }
-
-    const viajesRes = await fetch(`/api/viajes/${userId}`);
-    if (viajesRes.ok) {
-      const viajes = await viajesRes.json();
-      const normalizedViajes = viajes.map((v: any) => ({ ...v, id: v._id }));
-      const all: Viaje[] = JSON.parse(localStorage.getItem('taxi_viajes') || '[]');
-      const filtered = all.filter(v => v.userId !== userId);
-      localStorage.setItem('taxi_viajes', JSON.stringify([...filtered, ...normalizedViajes]));
-    }
-
-    const combRes = await fetch(`/api/combustible/${userId}`);
-    if (combRes.ok) {
-      const combs = await combRes.json();
-      const normalizedCombs = combs.map((c: any) => ({ ...c, id: c._id }));
-      const all: GastoCombustible[] = JSON.parse(localStorage.getItem('taxi_combustible') || '[]');
-      const filtered = all.filter(c => c.userId !== userId);
-      localStorage.setItem('taxi_combustible', JSON.stringify([...filtered, ...normalizedCombs]));
-    }
-
-    const maintRes = await fetch(`/api/mantenimiento/${userId}`);
-    if (maintRes.ok) {
-      const maints = await maintRes.json();
-      const normalizedMaints = maints.map((m: any) => ({ ...m, id: m._id }));
-      const all: Mantenimiento[] = JSON.parse(localStorage.getItem('taxi_mantenimiento') || '[]');
-      const filtered = all.filter(m => m.userId !== userId);
-      localStorage.setItem('taxi_mantenimiento', JSON.stringify([...filtered, ...normalizedMaints]));
-    }
-
-    const alertasRes = await fetch(`/api/alertas/${userId}`);
-    if (alertasRes.ok) {
-      const alertas = await alertasRes.json();
-      const normalizedAlertas = alertas.map((a: any) => ({ ...a, id: a._id }));
-      const all: AlertNotification[] = JSON.parse(localStorage.getItem('taxi_alertas') || '[]');
-      const filtered = all.filter(a => a.userId !== userId);
-      localStorage.setItem('taxi_alertas', JSON.stringify([...filtered, ...normalizedAlertas]));
-    }
-
-    const monotributoRes = await fetch(`/api/monotributo/${userId}`);
-    if (monotributoRes.ok) {
-      const monotributo = await monotributoRes.json();
-      const normalizedMonotributo = monotributo.map((m: any) => ({ ...m, id: m._id }));
-      const all: MonotributoRecord[] = JSON.parse(localStorage.getItem('taxi_monotributo') || '[]');
-      const filtered = all.filter(m => m.userId !== userId);
-      localStorage.setItem('taxi_monotributo', JSON.stringify([...filtered, ...normalizedMonotributo]));
-    }
-
-    const seguroRes = await fetch(`/api/seguro/${userId}`);
-    if (seguroRes.ok) {
-      const seguro = await seguroRes.json();
-      const normalizedSeguro = seguro.map((s: any) => ({ ...s, id: s._id }));
-      const all: SeguroRecord[] = JSON.parse(localStorage.getItem('taxi_seguro') || '[]');
-      const filtered = all.filter(s => s.userId !== userId);
-      localStorage.setItem('taxi_seguro', JSON.stringify([...filtered, ...normalizedSeguro]));
-    }
-
-    window.dispatchEvent(new Event('storage-update'));
-  } catch (err) {
-    console.error("Failed to sync from DB to local storage:", err);
-  }
+  // Bypassed: all operations load directly from the database API
 }
 
 // Low-level Getters/Setters
 export function getStoredUsers(): UserProfile[] {
-  initStorage();
-  return JSON.parse(localStorage.getItem('taxi_users') || '[]');
+  return [];
 }
 
-export function saveStoredUsers(users: UserProfile[]) {
-  localStorage.setItem('taxi_users', JSON.stringify(users));
-  for (const u of users) {
-    const isMongoId = /^[0-9a-fA-F]{24}$/.test(u.id);
-    if (isMongoId) {
-      isMongoAvailable().then(avail => {
-        if (avail) {
-          fetch(`/api/users/${u.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(u)
-          });
-        }
-      });
-    }
-  }
-}
+export function saveStoredUsers(users: UserProfile[]) {}
 
 export function getStoredViajes(userId: string): Viaje[] {
-  initStorage();
-  const all: Viaje[] = JSON.parse(localStorage.getItem('taxi_viajes') || '[]');
-  return all.filter(v => v.userId === userId);
+  return [];
 }
 
-export function saveStoredViajes(viajes: Viaje[], userId: string) {
-  const all: Viaje[] = JSON.parse(localStorage.getItem('taxi_viajes') || '[]');
-  const filtered = all.filter(v => v.userId !== userId);
-  localStorage.setItem('taxi_viajes', JSON.stringify([...filtered, ...viajes]));
-  syncViajesToDB(viajes, userId);
-}
+export function saveStoredViajes(viajes: Viaje[], userId: string) {}
 
 export function getStoredCombustible(userId: string): GastoCombustible[] {
-  initStorage();
-  const all: GastoCombustible[] = JSON.parse(localStorage.getItem('taxi_combustible') || '[]');
-  return all.filter(c => c.userId === userId);
+  return [];
 }
 
-export function saveStoredCombustible(combustible: GastoCombustible[], userId: string) {
-  const all: GastoCombustible[] = JSON.parse(localStorage.getItem('taxi_combustible') || '[]');
-  const filtered = all.filter(c => c.userId !== userId);
-  localStorage.setItem('taxi_combustible', JSON.stringify([...filtered, ...combustible]));
-  syncCombustibleToDB(combustible, userId);
-}
+export function saveStoredCombustible(combustible: GastoCombustible[], userId: string) {}
 
 export function getStoredMantenimiento(userId: string): Mantenimiento[] {
-  initStorage();
-  const all: Mantenimiento[] = JSON.parse(localStorage.getItem('taxi_mantenimiento') || '[]');
-  return all.filter(m => m.userId === userId);
+  return [];
 }
 
-export function saveStoredMantenimiento(mantenimiento: Mantenimiento[], userId: string) {
-  const all: Mantenimiento[] = JSON.parse(localStorage.getItem('taxi_mantenimiento') || '[]');
-  const filtered = all.filter(m => m.userId !== userId);
-  localStorage.setItem('taxi_mantenimiento', JSON.stringify([...filtered, ...mantenimiento]));
-  syncMantenimientoToDB(mantenimiento, userId);
-}
+export function saveStoredMantenimiento(mantenimiento: Mantenimiento[], userId: string) {}
 
 export function getStoredAlertas(userId: string): AlertNotification[] {
-  initStorage();
-  const all: AlertNotification[] = JSON.parse(localStorage.getItem('taxi_alertas') || '[]');
-  return all.filter(a => a.userId === userId);
+  return [];
 }
 
-export function saveStoredAlertas(alertas: AlertNotification[], userId: string) {
-  const all: AlertNotification[] = JSON.parse(localStorage.getItem('taxi_alertas') || '[]');
-  const filtered = all.filter(a => a.userId !== userId);
-  localStorage.setItem('taxi_alertas', JSON.stringify([...filtered, ...alertas]));
-  syncAlertasToDB(alertas, userId);
-}
+export function saveStoredAlertas(alertas: AlertNotification[], userId: string) {}
 
 export function getStoredMonotributo(userId: string): MonotributoRecord[] {
-  initStorage();
-  const all: MonotributoRecord[] = JSON.parse(localStorage.getItem('taxi_monotributo') || '[]');
-  return all.filter(m => m.userId === userId);
+  return [];
 }
 
-export function saveStoredMonotributo(records: MonotributoRecord[], userId: string) {
-  const all: MonotributoRecord[] = JSON.parse(localStorage.getItem('taxi_monotributo') || '[]');
-  const filtered = all.filter(m => m.userId !== userId);
-  localStorage.setItem('taxi_monotributo', JSON.stringify([...filtered, ...records]));
-  syncMonotributoToDB(records, userId);
-}
+export function saveStoredMonotributo(records: MonotributoRecord[], userId: string) {}
 
 export function getStoredSeguro(userId: string): SeguroRecord[] {
-  initStorage();
-  const all: SeguroRecord[] = JSON.parse(localStorage.getItem('taxi_seguro') || '[]');
-  return all.filter(s => s.userId === userId);
+  return [];
 }
 
-export function saveStoredSeguro(records: SeguroRecord[], userId: string) {
-  const all: SeguroRecord[] = JSON.parse(localStorage.getItem('taxi_seguro') || '[]');
-  const filtered = all.filter(s => s.userId !== userId);
-  localStorage.setItem('taxi_seguro', JSON.stringify([...filtered, ...records]));
-  syncSeguroToDB(records, userId);
-}
+export function saveStoredSeguro(records: SeguroRecord[], userId: string) {}
 
 export function getTodayDateString(): string {
   const today = new Date();
