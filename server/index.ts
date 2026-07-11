@@ -6,6 +6,7 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import { User, Viaje, GastoCombustible, Mantenimiento, Alerta } from './models';
 import apiRouter from './routes';
+import connectDB from './config/database';
 
 dotenv.config();
 
@@ -16,39 +17,27 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection with fallback warning
-let MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI || MONGODB_URI.trim() === "") {
-  MONGODB_URI = "mongodb://localhost:27017/taxi-control";
-}
-
-let dbConnected = false;
-
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log("✅ Connected to MongoDB successfully");
-    dbConnected = true;
-    seedDemoData();
-  })
-  .catch((err) => {
-    console.warn("⚠️  Could not connect to MongoDB database:", err.message);
-    console.info("💡 Tip: The app will run in fallback Offline-First mode using local storage. To use persistent cloud database storage, set your MONGODB_URI (e.g., MongoDB Atlas) under Settings -> Secrets.");
-  });
-
-// --- DEMO DATA SEEDER ---
-async function seedDemoData() {
-  console.log("🌱 Database seeding skipped (requested by user to clear pre-loaded data).");
-}
+// Ensure Database is connected for each request (crucial for Serverless Vercel warm starts)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err: any) {
+    console.error("Database connection middleware error:", err.message);
+    next();
+  }
+});
 
 // --- MOUNT API ROUTER ---
 app.use('/api', apiRouter);
 
 // Health Check & DB Status (Keep legacy for verification)
 app.get('/api/health', (req, res) => {
+  const isConnected = mongoose.connection.readyState === 1;
   res.json({ 
     status: "ok", 
-    mongodb: dbConnected ? "connected" : "disconnected",
-    database: MONGODB_URI.includes("@") ? "Remote Atlas" : "Local/Fallback"
+    mongodb: isConnected ? "connected" : "disconnected",
+    database: (process.env.MONGODB_URI || "").includes("@") ? "Remote Atlas" : "Local/Fallback"
   });
 });
 

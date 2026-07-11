@@ -329,7 +329,7 @@ export default function App() {
         <div className="flex items-center space-x-2 text-white font-black text-sm font-display uppercase tracking-wider">
           <div className="h-6.5 w-6.5 rounded-md overflow-hidden border border-yellow-400/30 bg-slate-800 shrink-0">
             <img
-              src="/src/assets/images/taxi_dark_gold_1783567838853.jpg"
+              src="/assets/images/taxi_dark_gold_1783567838853.jpg"
               alt="Logo Taxi"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
@@ -406,7 +406,7 @@ export default function App() {
           <div className="flex items-center space-x-3 px-3 text-white font-extrabold text-lg tracking-tight font-display uppercase">
             <div className="h-9.5 w-9.5 rounded-lg overflow-hidden border border-yellow-400/30 bg-slate-800 shrink-0 relative shadow-md shadow-yellow-400/5 flex items-center justify-center">
               <img
-                src="/src/assets/images/taxi_dark_gold_1783567838853.jpg"
+                src="/assets/images/taxi_dark_gold_1783567838853.jpg"
                 alt="Logo Taxi"
                 className="w-full h-full object-cover scale-110"
                 referrerPolicy="no-referrer"

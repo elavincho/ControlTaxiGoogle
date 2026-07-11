@@ -129,7 +129,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
       {/* Left side: Golden Dark Taxi Image Banner */}
       <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-slate-950 relative overflow-hidden items-center justify-center border-r border-slate-200/40">
         <img 
-          src="/src/assets/images/taxi_dark_gold_1783567838853.jpg" 
+          src="/assets/images/taxi_dark_gold_1783567838853.jpg" 
           alt="Premium Taxi" 
           className="absolute inset-0 w-full h-full object-cover opacity-75 transform scale-105"
           referrerPolicy="no-referrer"
@@ -161,7 +161,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
         <div className="md:hidden -mx-6 -mt-8 mb-6 sm:-mx-12 relative overflow-hidden shrink-0">
           <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] overflow-hidden border-b border-slate-200 dark:border-zinc-800 bg-slate-950">
             <img 
-              src="/src/assets/images/taxi_dark_gold_1783567838853.jpg" 
+              src="/assets/images/taxi_dark_gold_1783567838853.jpg" 
               alt="Taxi Header" 
               className="w-full h-full object-cover object-center"
               referrerPolicy="no-referrer"

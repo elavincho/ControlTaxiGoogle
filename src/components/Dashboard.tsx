@@ -603,7 +603,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
             {/* Small vehicle snapshot */}
             <div className="h-16 w-24 rounded-lg overflow-hidden border border-slate-200 bg-white shrink-0 relative">
               <img 
-                src="/src/assets/images/taxi_dark_gold_1783567838853.jpg" 
+                src="/assets/images/taxi_dark_gold_1783567838853.jpg" 
                 alt="Taxi" 
                 className="w-full h-full object-cover opacity-90"
                 referrerPolicy="no-referrer"
