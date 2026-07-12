@@ -284,7 +284,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
     return Object.keys(methods).map(key => ({
       name: key,
       Monto: methods[key]
-    })).filter(item => item.Monto > 0);
+    }));
   };
 
   const paymentData = generatePaymentMethodsData();
@@ -420,7 +420,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           
           <div class="info-grid">
             <div class="info-card">
-              <p><strong>Chofer:</strong> ${user.name}</p>
+              <p><strong>Usuario:</strong> ${user.name}</p>
               <p><strong>Email:</strong> ${user.email}</p>
               <p><strong>Usuario:</strong> @${user.username}</p>
               <p><strong>N° de Licencia:</strong> ${user.licenciaTaxi || 'No registrada'}</p>
@@ -551,7 +551,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           ` : '<p style="font-size: 12px; color: #64748b; font-style: italic;">No hay mantenimientos registrados este mes.</p>'}
 
           <div class="footer">
-            <p>Reporte generado el 08/07/2026 para el chofer ${user.name} - Taxi Control Premium</p>
+            <p>Reporte generado el 08/07/2026 para el usuario ${user.name} - Taxi Control Premium</p>
           </div>
           
           <script>
@@ -582,7 +582,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           <div className="flex items-center space-x-4">
             <div className="relative">
               <img 
-                src={user.avatarUrl || "https://api.dicebear.com/7.x/pixel-art/svg?seed=taxi"} 
+                src={"/assets/images/taxista-masculino.webp"} 
                 alt={user.name} 
                 className="w-16 h-16 rounded-2xl object-cover border border-slate-200 bg-slate-50 p-0.5 shadow-sm"
               />
@@ -592,9 +592,9 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
               </span>
             </div>
             <div>
-              <p className="text-slate-400 text-xs font-bold tracking-wider uppercase">¡Hola de nuevo, Chofer!</p>
+              <p className="text-slate-400 text-xs font-bold tracking-wider uppercase">HOLA</p>
               <h2 className="text-2xl font-black text-slate-900 leading-tight font-display">{user.name}</h2>
-              <p className="text-xs text-yellow-600 font-mono mt-0.5 font-bold">Taxi Nº 10 | @{user.username}</p>
+              <p className="text-xs text-yellow-600 font-mono mt-0.5 font-bold">@{user.username}</p>
             </div>
           </div>
 
@@ -608,8 +608,6 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
                 className="w-full h-full object-cover opacity-90"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-              <div className="absolute bottom-1 left-2 text-[9px] font-mono text-yellow-400 font-bold tracking-widest">{user.carPlate}</div>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs font-mono">
@@ -746,7 +744,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       {/* 4. KPI Scorecards (Today vs Month) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-metrics">
         {/* Card 1: Ingresos */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <DollarSign className="h-5 w-5" />
@@ -767,7 +765,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
         </div>
 
         {/* Card 2: Gastos */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <Compass className="h-5 w-5" />
@@ -788,7 +786,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
         </div>
 
         {/* Card 3: Ganancia Neta */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="h-10 w-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
               <TrendingUp className="h-5 w-5" />
@@ -808,7 +806,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
         </div>
 
         {/* Card 4: Viajes y Próx Mantenimiento */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="h-10 w-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
               <Clock className="h-5 w-5" />
@@ -898,21 +896,31 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
             )}
 
             {/* Custom Legend */}
-            <div className="grid grid-cols-3 gap-2 text-[10px] font-mono text-center pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-5 gap-1 text-[9px] font-mono text-center pt-2 border-t border-slate-100">
               <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mb-1"></span>
-                <span className="text-slate-400">GNC</span>
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="GNC">GNC</span>
                 <strong className="text-slate-700">${statsMes.gastosGNC.toLocaleString()}</strong>
               </div>
               <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 mb-1"></span>
-                <span className="text-slate-400">Nafta</span>
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="Nafta">Nafta</span>
                 <strong className="text-slate-700">${statsMes.gastosNafta.toLocaleString()}</strong>
               </div>
               <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 mb-1"></span>
-                <span className="text-slate-400">Taller</span>
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="Taller">Taller</span>
                 <strong className="text-slate-700">${statsMes.gastosMantenimiento.toLocaleString()}</strong>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="Monotributo">Monot.</span>
+                <strong className="text-slate-700">${totalMonotributoMes.toLocaleString()}</strong>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-pink-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="Seguro">Seguro</span>
+                <strong className="text-slate-700">${totalSeguroMes.toLocaleString()}</strong>
               </div>
             </div>
           </div>
@@ -925,16 +933,27 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
             </div>
             
             {paymentData.length > 0 ? (
-              <div className="w-full h-32 mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={paymentData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                    <XAxis type="number" stroke="#64748b" fontSize={9} tickLine={false} />
-                    <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={9} width={80} tickLine={false} />
-                    <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
-                    <Bar dataKey="Monto" fill="#ca8a04" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="flex flex-col flex-1 justify-between">
+                <div className="w-full h-32 mt-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={paymentData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                      <XAxis type="number" stroke="#64748b" fontSize={9} tickLine={false} />
+                      <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={8.5} width={105} tickLine={false} />
+                      <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                      <Bar dataKey="Monto" fill="#ca8a04" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Detailed Legend containing all descriptions */}
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[9px] font-mono pt-2 border-t border-slate-100 mt-2">
+                  {paymentData.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                      <span className="text-slate-500 font-bold truncate" title={item.name}>{item.name}:</span>
+                      <strong className="text-yellow-600 shrink-0 font-bold">${item.Monto.toLocaleString()}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="h-32 flex items-center justify-center text-xs text-slate-400 italic">No hay cobros registrados.</div>

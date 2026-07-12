@@ -133,7 +133,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }: LoginPro
           <div className="hidden md:block">
             <div className="flex items-center space-x-2 text-yellow-600 font-mono text-xs tracking-wider uppercase mb-1">
               <span className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse"></span>
-              <span>Acceso de Choferes</span>
+              <span>Acceso de Usuarios</span>
             </div>
             <h2 className="text-3xl font-black tracking-tight text-slate-900 font-display uppercase">
               Iniciar Sesión
@@ -236,7 +236,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }: LoginPro
                 type="submit"
                 className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-md shadow-yellow-400/10 hover:shadow-yellow-400/20 focus:outline-none cursor-pointer"
               >
-                <span>Acceder al Tablero</span>
+                <span>Iniciar Sesión</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -244,7 +244,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }: LoginPro
 
           <div className="border-t border-slate-100 pt-6 text-center">
             <p className="text-xs text-slate-500">
-              ¿No tienes una cuenta de chofer?{' '}
+              ¿No tienes una cuenta de usuario?{' '}
               <button
                 onClick={onNavigateToRegister}
                 className="text-yellow-600 font-bold hover:text-yellow-700 hover:underline transition-colors focus:outline-none"

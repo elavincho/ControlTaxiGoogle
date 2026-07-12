@@ -56,7 +56,7 @@ export async function registerUser(userData: Partial<UserProfile>): Promise<User
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData)
   });
-  const user = await handleResponse(res, 'Error al registrar chofer en la base de datos.');
+  const user = await handleResponse(res, 'Error al registrar usuario en la base de datos.');
   if (user && user._id) {
     user.id = user._id;
   }

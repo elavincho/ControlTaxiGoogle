@@ -156,7 +156,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
           </div>
           <div className="text-center mt-5 px-6">
             <h2 className="text-3xl font-black text-slate-900 font-display uppercase tracking-wider">
-              REGISTRO DE <span className="text-yellow-500 font-black">CHOFER</span>
+              REGISTRO DE <span className="text-yellow-500 font-black">USUARIO</span>
             </h2>
             <p className="text-xs text-slate-500 mt-1">Crear Cuenta Nueva — Taxi Control</p>
           </div>
@@ -175,7 +175,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
           <div className="hidden md:block">
             <div className="flex items-center space-x-2 text-yellow-600 font-mono text-xs tracking-wider uppercase mb-1">
               <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span>Registro de Chofer</span>
+              <span>Registro de Usuario</span>
             </div>
             <h2 className="text-2xl font-black tracking-tight text-slate-900 font-display uppercase">
               Crear Cuenta Nueva
@@ -369,26 +369,26 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
       {/* Simulated Email Verification Modal */}
       {isVerificationModalOpen && tempCreatedUser && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-6 relative overflow-hidden shadow-xl text-slate-900">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-6 relative overflow-hidden shadow-xl text-slate-900 animate-in fade-in zoom-in-95 duration-150">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-400" />
             
             <div className="flex items-center space-x-3 pb-3 border-b border-slate-100">
               <div className="h-10 w-10 rounded-full bg-yellow-400/10 flex items-center justify-center text-yellow-600">
-                <Mail className="h-5 w-5 animate-bounce" />
+                <CheckCircle className="h-5 w-5 animate-bounce" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-base font-display">Correo de Activación Simulado</h3>
+                <h3 className="font-bold text-slate-900 text-base font-display">Registro Exitoso</h3>
                 <p className="text-[10px] text-slate-500">De: noreply@taxicontrol.com | Para: {tempCreatedUser.email}</p>
               </div>
             </div>
 
             <div className="space-y-4 py-2">
               <p className="text-xs text-slate-600">
-                ¡Hola <strong className="text-yellow-600 font-bold">{tempCreatedUser.name}</strong>! Gracias por registrarte en nuestra plataforma de administración de taxis.
+                ¡Hola <strong className="text-yellow-600 font-bold">{tempCreatedUser.name}</strong>! Tu cuenta ha sido creada y registrada correctamente en la plataforma.
               </p>
               <div className="bg-slate-50 border border-slate-150 p-4 rounded-xl text-xs space-y-3">
-                <p className="text-slate-500 leading-relaxed text-[11px]">
-                  Para activar tu cuenta y empezar a cargar tus viajes, cargas de combustibles y mantenimientos, haz clic en el siguiente enlace de verificación seguro (este es un flujo de prueba interactivo):
+                <p className="text-slate-500 leading-relaxed text-[11px] text-center font-semibold">
+                  Tu registro se ha completado de forma exitosa. Haz clic en el botón de abajo para activar tu cuenta e ingresar al sistema.
                 </p>
                 <div className="text-center py-2">
                   <button
@@ -396,13 +396,10 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
                     className="inline-flex items-center space-x-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-yellow-400/10 hover:shadow-yellow-400/20 transition-all cursor-pointer"
                   >
                     <CheckCircle className="h-4 w-4" />
-                    <span>Verificar y Activar Cuenta</span>
+                    <span>Activar y Continuar al Login</span>
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400 italic text-center">
-                Nota: Al hacer clic en el botón de arriba, se guardará tu registro de forma segura en el almacenamiento local y se habilitará tu inicio de sesión de inmediato.
-              </p>
             </div>
           </div>
         </div>

@@ -297,6 +297,7 @@ export default function App() {
             user={currentUser} 
             onUserUpdate={handleUserUpdate} 
             onAccountDeleted={handleAccountDeleted} 
+            onNavigate={setActiveScreen}
           />
         );
       default:
@@ -351,7 +352,7 @@ export default function App() {
             {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-400" /> : <Moon className="h-5 w-5 text-slate-450" />}
           </button>
           <img 
-            src={currentUser.avatarUrl || "https://api.dicebear.com/7.x/pixel-art/svg?seed=taxi"} 
+            src={"/assets/images/taxista-masculino.webp"} 
             alt={currentUser.name} 
             className="w-7 h-7 rounded-lg border border-yellow-400/30 object-cover"
           />
@@ -446,7 +447,7 @@ export default function App() {
         <div className="space-y-4 pt-4 border-t border-zinc-900">
           <div className="flex items-center space-x-3 px-2 bg-zinc-900/50 p-2 rounded-xl border border-zinc-800/40">
             <img 
-              src={currentUser.avatarUrl || "https://api.dicebear.com/7.x/pixel-art/svg?seed=taxi"} 
+              src={"/assets/images/taxista-masculino.webp"} 
               alt={currentUser.name} 
               className="w-9 h-9 rounded-xl border border-zinc-800/80 object-cover"
             />
@@ -488,7 +489,7 @@ export default function App() {
             </div>
             
             <h3 className="text-lg font-bold font-display text-slate-900 flex items-center justify-center space-x-2">
-              <span>¿Sigues ahí, Chofer?</span>
+              <span>¿Sigues ahí, Usuario?</span>
             </h3>
             
             <p className="text-xs text-slate-500 leading-relaxed">

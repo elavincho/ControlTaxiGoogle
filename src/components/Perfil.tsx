@@ -27,9 +27,10 @@ interface PerfilProps {
   user: UserProfile;
   onUserUpdate: (updatedUser: UserProfile) => void;
   onAccountDeleted: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilProps) {
+export default function Perfil({ user, onUserUpdate, onAccountDeleted, onNavigate }: PerfilProps) {
   // Personal Info form
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
@@ -56,6 +57,8 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilP
   const [errorMsg, setErrorMsg] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteConfirmationWord, setDeleteConfirmationWord] = useState('');
+  const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState('');
 
   const [showPwCurrent, setShowPwCurrent] = useState(false);
   const [showPwNew, setShowPwNew] = useState(false);
@@ -79,7 +82,14 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilP
       });
 
       onUserUpdate(updatedUser);
-      setInfoMsg('¡Perfil actualizado con éxito!');
+      setSuccessModalMessage('¡Tu información de perfil ha sido actualizada con éxito!');
+      setShowSaveSuccessModal(true);
+      
+      // Auto redirect to Panel de Control in 2.5 seconds
+      setTimeout(() => {
+        setShowSaveSuccessModal(false);
+        onNavigate?.('dashboard');
+      }, 2500);
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al actualizar el perfil.');
     }
@@ -115,7 +125,14 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilP
       });
 
       onUserUpdate(updatedUser);
-      setInfoMsg('¡Datos del taxi actualizados con éxito!');
+      setSuccessModalMessage('¡Los datos de tu vehículo/taxi han sido guardados y sincronizados con éxito!');
+      setShowSaveSuccessModal(true);
+
+      // Auto redirect to Panel de Control in 2.5 seconds
+      setTimeout(() => {
+        setShowSaveSuccessModal(false);
+        onNavigate?.('dashboard');
+      }, 2500);
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al actualizar datos del taxi.');
     }
@@ -204,7 +221,7 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilP
     <div className="space-y-6 font-sans pb-12" id="perfil-view">
       {/* View Header */}
       <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-xl font-black text-slate-900 font-display uppercase">Mi Perfil de Chofer</h2>
+        <h2 className="text-xl font-black text-slate-900 font-display uppercase">Mi Perfil de Usuario</h2>
         <p className="text-xs text-slate-400 font-bold">Administra tus credenciales personales y los parámetros operativos de tu vehículo.</p>
       </div>
 
@@ -545,6 +562,51 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted }: PerfilP
               >
                 Sí, eliminar para siempre
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Success Modal Overlay (Register style) */}
+      {showSaveSuccessModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="profile-save-success-modal">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-6 relative overflow-hidden shadow-xl text-slate-900 animate-in fade-in zoom-in-95 duration-150">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-400" />
+            
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-100">
+              <div className="h-10 w-10 rounded-full bg-yellow-400/10 flex items-center justify-center text-yellow-600">
+                <Check className="h-5 w-5 animate-bounce" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-base font-display">Cambios Guardados Exitosamente</h3>
+                <p className="text-[10px] text-slate-500">De: noreply@taxicontrol.com | Para: {user.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 py-2">
+              <p className="text-xs text-slate-600">
+                ¡Hola <strong className="text-yellow-600 font-bold">{user.name}</strong>! Tu información ha sido guardada y sincronizada correctamente con la base de datos de Taxi Control.
+              </p>
+              <div className="bg-slate-50 border border-slate-150 p-4 rounded-xl text-xs space-y-3">
+                <p className="text-slate-500 leading-relaxed text-[11px] text-center font-semibold">
+                  {successModalMessage}
+                </p>
+                <div className="text-center py-2">
+                  <button
+                    onClick={() => {
+                      setShowSaveSuccessModal(false);
+                      onNavigate?.('dashboard');
+                    }}
+                    className="inline-flex items-center space-x-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-yellow-400/10 hover:shadow-yellow-400/20 transition-all cursor-pointer"
+                  >
+                    <Check className="h-4 w-4" />
+                    <span>Volver al Panel de Control</span>
+                  </button>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 italic text-center">
+                Redirigiendo automáticamente en unos instantes...
+              </p>
             </div>
           </div>
         </div>
