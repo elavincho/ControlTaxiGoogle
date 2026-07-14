@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, FilterRange, PaymentMethod, MonotributoRecord, SeguroRecord } from '../types';
+import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, FilterRange, PaymentMethod, MonotributoRecord, SeguroRecord, PatenteRecord } from '../types';
 
 // Simple encryption helper (using a custom hash function for secure storage in localStorage)
 export function encryptPassword(password: string): string {
@@ -546,6 +546,12 @@ export function getStoredSeguro(userId: string): SeguroRecord[] {
 
 export function saveStoredSeguro(records: SeguroRecord[], userId: string) {}
 
+export function getStoredPatente(userId: string): PatenteRecord[] {
+  return [];
+}
+
+export function saveStoredPatente(records: PatenteRecord[], userId: string) {}
+
 export function getTodayDateString(): string {
   const today = new Date();
   const year = today.getFullYear();
@@ -554,15 +560,28 @@ export function getTodayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
+export function parseLocalDate(dateStr: string): Date {
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 0-indexed
+    const day = parseInt(parts[2], 10);
+    return new Date(year, month, day);
+  }
+  return new Date(dateStr);
+}
+
 // Date helpers for filtering
 export function isDateInCurrentWeek(dateStr: string, referenceDateStr?: string): boolean {
-  const refDate = new Date(referenceDateStr || getTodayDateString());
-  const targetDate = new Date(dateStr);
+  const refDate = parseLocalDate(referenceDateStr || getTodayDateString());
+  const targetDate = parseLocalDate(dateStr);
   
   // Get start and end of week for reference date
   const day = refDate.getDay();
   const diff = refDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  const startOfWeek = new Date(refDate.setDate(diff));
+  
+  const startOfWeek = new Date(refDate);
+  startOfWeek.setDate(diff);
   startOfWeek.setHours(0,0,0,0);
   
   const endOfWeek = new Date(startOfWeek);
@@ -577,13 +596,13 @@ export function filterByRange<T extends { fecha: string }>(
   range: FilterRange, 
   customDateStr?: string
 ): T[] {
-  const refDate = new Date(customDateStr || getTodayDateString());
+  const refDate = parseLocalDate(customDateStr || getTodayDateString());
   const refYear = refDate.getFullYear();
   const refMonth = refDate.getMonth(); // 0-indexed
   const refDay = refDate.getDate();
 
   return items.filter(item => {
-    const itemDate = new Date(item.fecha);
+    const itemDate = parseLocalDate(item.fecha);
     const itemYear = itemDate.getFullYear();
     const itemMonth = itemDate.getMonth();
     const itemDay = itemDate.getDate();

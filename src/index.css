@@ -170,3 +170,23 @@ select.bg-slate-50 {
   opacity: 0.15;
 }
 
+/* MOBILE FONT SIZE ENHANCEMENT FOR BETTER VISIBILITY */
+@media (max-width: 767px) {
+  html {
+    font-size: 108%; /* Scales up rem-based fonts */
+  }
+  .text-\[10px\] {
+    font-size: 0.725rem !important; /* scales up 10px fonts on mobile */
+  }
+  .text-xs {
+    font-size: 0.85rem !important; /* scales up text-xs on mobile */
+  }
+  .text-sm {
+    font-size: 0.95rem !important; /* scales up text-sm on mobile */
+  }
+  .text-base {
+    font-size: 1.05rem !important; /* scales up text-base on mobile */
+  }
+}
+
+

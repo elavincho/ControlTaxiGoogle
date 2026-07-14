@@ -5,13 +5,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { calculateSummary, filterByRange, getTodayDateString } from '../utils/storage';
-import { Viaje, GastoCombustible, Mantenimiento, MonotributoRecord, SeguroRecord } from '../types';
+import { Viaje, GastoCombustible, Mantenimiento, MonotributoRecord, SeguroRecord, PatenteRecord } from '../types';
 import { 
   getViajes,
   getCombustible,
   getMantenimiento,
   getMonotributo,
-  getSeguro
+  getSeguro,
+  getPatente
 } from '../utils/api';
 import { 
   DollarSign, 
@@ -34,6 +35,7 @@ export default function Resumenes({ userId }: ResumenesProps) {
   const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
   const [monotributos, setMonotributos] = useState<MonotributoRecord[]>([]);
   const [seguros, setSeguros] = useState<SeguroRecord[]>([]);
+  const [patentes, setPatentes] = useState<PatenteRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,15 +48,17 @@ export default function Resumenes({ userId }: ResumenesProps) {
         getCombustible(userId),
         getMantenimiento(userId),
         getMonotributo(userId),
-        getSeguro(userId)
+        getSeguro(userId),
+        getPatente(userId)
       ])
-        .then(([vList, cList, mList, mtList, sList]) => {
+        .then(([vList, cList, mList, mtList, sList, pList]) => {
           if (active) {
             setViajes(vList);
             setCombustibles(cList);
             setMantenimientos(mList);
             setMonotributos(mtList);
             setSeguros(sList);
+            setPatentes(pList);
           }
         })
         .catch((err) => console.error("Error loading summaries:", err))
@@ -80,6 +84,7 @@ export default function Resumenes({ userId }: ResumenesProps) {
   // Map fechaPago to fecha for compatibility with filterByRange
   const monotributosMapped = monotributos.map(m => ({ ...m, fecha: m.fechaPago }));
   const segurosMapped = seguros.map(s => ({ ...s, fecha: s.fechaPago }));
+  const patentesMapped = patentes.map(p => ({ ...p, fecha: p.fechaPago }));
 
   // --- MONTHLY SUMMARY (Current Month: July 2026) ---
   const viajesMes = filterByRange<Viaje>(viajes, 'mes', REFERENCE_DATE);
@@ -87,11 +92,13 @@ export default function Resumenes({ userId }: ResumenesProps) {
   const mantenimientosMes = filterByRange<Mantenimiento>(mantenimientos, 'mes', REFERENCE_DATE);
   const monotributosMes = filterByRange<MonotributoRecord & { fecha: string }>(monotributosMapped, 'mes', REFERENCE_DATE);
   const segurosMes = filterByRange<SeguroRecord & { fecha: string }>(segurosMapped, 'mes', REFERENCE_DATE);
+  const patentesMes = filterByRange<PatenteRecord & { fecha: string }>(patentesMapped, 'mes', REFERENCE_DATE);
 
   const monthlyStats = calculateSummary(viajesMes, combustiblesMes, mantenimientosMes);
   const totalMonotributoMes = monotributosMes.reduce((sum, m) => sum + m.importe, 0);
   const totalSeguroMes = segurosMes.reduce((sum, s) => sum + s.importe, 0);
-  const totalGastosMesFinal = monthlyStats.gastosTotales + totalMonotributoMes + totalSeguroMes;
+  const totalPatenteMes = patentesMes.reduce((sum, p) => sum + p.importe, 0);
+  const totalGastosMesFinal = monthlyStats.gastosTotales + totalMonotributoMes + totalSeguroMes + totalPatenteMes;
   const gananciaNetaMesFinal = monthlyStats.ingresosTotales - totalGastosMesFinal;
 
   // --- SELECTED DAY SUMMARY ---
@@ -101,11 +108,13 @@ export default function Resumenes({ userId }: ResumenesProps) {
   const mantenimientosDia = mantenimientos.filter(m => m.fecha === selectedDailyDate);
   const monotributosDia = monotributos.filter(m => m.fechaPago === selectedDailyDate);
   const segurosDia = seguros.filter(s => s.fechaPago === selectedDailyDate);
+  const patentesDia = patentes.filter(p => p.fechaPago === selectedDailyDate);
 
   const dailyStats = calculateSummary(viajesDia, combustiblesDia, mantenimientosDia);
   const totalMonotributoDia = monotributosDia.reduce((sum, m) => sum + m.importe, 0);
   const totalSeguroDia = segurosDia.reduce((sum, s) => sum + s.importe, 0);
-  const totalGastosDiaFinal = dailyStats.gastosTotales + totalMonotributoDia + totalSeguroDia;
+  const totalPatenteDia = patentesDia.reduce((sum, p) => sum + p.importe, 0);
+  const totalGastosDiaFinal = dailyStats.gastosTotales + totalMonotributoDia + totalSeguroDia + totalPatenteDia;
   const gananciaNetaDiaFinal = dailyStats.ingresosTotales - totalGastosDiaFinal;
 
   if (loading && viajes.length === 0) {
@@ -179,12 +188,21 @@ export default function Resumenes({ userId }: ResumenesProps) {
             </div>
           </div>
 
+          {/* Gasto Patente Mensual */}
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-black block mb-2">Patente Mensual</span>
+            <div>
+              <h4 className="text-2xl font-black text-cyan-600">$ {totalPatenteMes.toLocaleString()}</h4>
+              <p className="text-[10px] text-slate-400 font-bold mt-1">Impuesto de patente pagado</p>
+            </div>
+          </div>
+
           {/* Total Gastos Mensuales */}
           <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between border-l-4 border-l-rose-500 shadow-sm">
             <span className="text-[10px] font-mono text-rose-500 uppercase font-black block mb-2">Total de Gastos</span>
             <div>
               <h4 className="text-2xl font-black text-rose-600">$ {totalGastosMesFinal.toLocaleString()}</h4>
-              <p className="text-[10px] text-slate-400 font-bold mt-1">Combustibles + Taller + Monotributo + Seguro</p>
+              <p className="text-[10px] text-slate-400 font-bold mt-1">Combustibles + Taller + Monotributo + Seguro + Patente</p>
             </div>
           </div>
 
@@ -293,7 +311,7 @@ export default function Resumenes({ userId }: ResumenesProps) {
               <span className="text-[10px] font-mono text-slate-400 uppercase font-black block">Total de Gastos Diario</span>
               <div className="text-2xl font-black text-rose-600">$ {totalGastosDiaFinal.toLocaleString()}</div>
               <div className="text-[10px] text-slate-400 font-mono font-bold mt-0.5">
-                (Combustibles + Talleres + Monotributo + Seguro)
+                (Combustibles + Talleres + Monotributo + Seguro + Patente)
               </div>
             </div>
           </div>

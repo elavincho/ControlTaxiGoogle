@@ -34,7 +34,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   'Tarjeta de Crédito', 
   'Mercado Pago', 
   'Transferencia', 
-  'App Taxi'
+  'App'
 ];
 
 export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange }: ViajesProps) {
@@ -76,6 +76,7 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
   const [fecha, setFecha] = useState('');
   const [formaPago, setFormaPago] = useState<PaymentMethod>('Efectivo');
   const [monto, setMonto] = useState('');
+  const [tipoViaje, setTipoViaje] = useState('Taxi (Calle)');
   const [formError, setFormError] = useState('');
 
   // Local state for additional text search (like amount or method)
@@ -88,6 +89,7 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
     setFecha(REFERENCE_DATE); // default to current mock date
     setFormaPago('Efectivo');
     setMonto('');
+    setTipoViaje('Taxi (Calle)');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -97,6 +99,7 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
     setFecha(trip.fecha);
     setFormaPago(trip.formaPago);
     setMonto(trip.monto.toString());
+    setTipoViaje(trip.tipoViaje || 'Taxi (Calle)');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -128,12 +131,12 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
     try {
       if (editingTrip) {
         // Edit
-        const updatedItem = await updateViaje(editingTrip.id, { fecha, formaPago, monto: numMonto }, userId);
+        const updatedItem = await updateViaje(editingTrip.id, { fecha, formaPago, monto: numMonto, tipoViaje }, userId);
         const updatedViajes = viajes.map(v => v.id === editingTrip.id ? updatedItem : v);
         setViajes(updatedViajes);
       } else {
         // Add
-        const newTrip = await saveViaje({ userId, fecha, formaPago, monto: numMonto });
+        const newTrip = await saveViaje({ userId, fecha, formaPago, monto: numMonto, tipoViaje });
         setViajes([newTrip, ...viajes]);
       }
 
@@ -150,10 +153,12 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
   // Optional query text filtering
   const filteredViajes = filteredViajesByRange.filter(v => {
     const q = searchQuery.toLowerCase();
+    const tViaje = (v.tipoViaje || 'Taxi (Calle)').toLowerCase();
     return (
       v.formaPago.toLowerCase().includes(q) ||
       v.monto.toString().includes(q) ||
-      v.fecha.includes(q)
+      v.fecha.includes(q) ||
+      tViaje.includes(q)
     );
   });
 
@@ -236,6 +241,7 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
             <thead>
               <tr className="border-b border-slate-200 text-slate-400 font-mono uppercase text-[10px] font-bold bg-slate-50">
                 <th className="py-3 px-4">Fecha del Viaje</th>
+                <th className="py-3 px-4">Tipo de Viaje</th>
                 <th className="py-3 px-4">Forma de Pago</th>
                 <th className="py-3 px-4 text-right">Monto Recaudado</th>
                 <th className="py-3 px-4 text-center">Acciones</th>
@@ -246,6 +252,11 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
                 filteredViajes.map((trip) => (
                   <tr key={trip.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold">{trip.fecha}</td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-700">
+                      <span className="px-2 py-1 rounded-md text-[10px] uppercase font-bold bg-slate-100 text-slate-700">
+                        {trip.tipoViaje || 'Taxi (Calle)'}
+                      </span>
+                    </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-150 text-slate-700 font-bold space-x-1.5">
                         {trip.formaPago === 'Efectivo' ? (
@@ -279,7 +290,7 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-slate-400 italic font-bold">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 italic font-bold">
                     No se encontraron viajes que coincidan con el filtro o búsqueda seleccionados.
                   </td>
                 </tr>
@@ -342,6 +353,27 @@ export default function Viajes({ userId, globalFilterRange, setGlobalFilterRange
                   >
                     {PAYMENT_METHODS.map((m) => (
                       <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tipo de Viaje */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  Tipo de Viaje
+                </label>
+                <div className="relative">
+                  <select
+                    value={tipoViaje}
+                    onChange={(e) => setTipoViaje(e.target.value)}
+                    className="block w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer"
+                  >
+                    {['Taxi (Calle)', 'Uber', 'Didi', 'Cabify', 'BA Taxi'].map((t) => (
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">

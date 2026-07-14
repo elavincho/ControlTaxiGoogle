@@ -5,3 +5,4 @@ export { Mantenimiento } from './Mantenimiento';
 export { Alerta } from './Alerta';
 export { Monotributo } from './Monotributo';
 export { Seguro } from './Seguro';
+export { Patente } from './Patente';

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, MonotributoRecord, SeguroRecord } from '../types';
+import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, MonotributoRecord, SeguroRecord, PatenteRecord } from '../types';
 import { 
   calculateSummary, 
   filterByRange, 
@@ -14,6 +14,7 @@ import {
   getStoredAlertas, 
   getStoredMonotributo,
   getStoredSeguro,
+  getStoredPatente,
   getTodayDateString
 } from '../utils/storage';
 import {
@@ -24,7 +25,8 @@ import {
   saveAlerta,
   updateAlerta,
   getMonotributo,
-  getSeguro
+  getSeguro,
+  getPatente
 } from '../utils/api';
 import { 
   DollarSign, 
@@ -81,6 +83,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
   const [alertas, setAlertas] = useState<AlertNotification[]>(() => getStoredAlertas(user.id));
   const [monotributos, setMonotributos] = useState<MonotributoRecord[]>(() => getStoredMonotributo(user.id));
   const [seguros, setSeguros] = useState<SeguroRecord[]>(() => getStoredSeguro(user.id));
+  const [patentes, setPatentes] = useState<PatenteRecord[]>(() => getStoredPatente(user.id));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -93,9 +96,10 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       getMantenimiento(user.id),
       getAlertas(user.id),
       getMonotributo(user.id),
-      getSeguro(user.id)
+      getSeguro(user.id),
+      getPatente(user.id)
     ])
-      .then(([vList, cList, mList, aList, mtList, sList]) => {
+      .then(([vList, cList, mList, aList, mtList, sList, pList]) => {
         if (active) {
           setViajes(vList);
           setCombustibles(cList);
@@ -103,6 +107,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           setAlertas(aList);
           setMonotributos(mtList);
           setSeguros(sList);
+          setPatentes(pList);
         }
       })
       .catch((err) => console.error("Error loading dashboard data:", err))
@@ -117,8 +122,9 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
         getMantenimiento(user.id),
         getAlertas(user.id),
         getMonotributo(user.id),
-        getSeguro(user.id)
-      ]).then(([vList, cList, mList, aList, mtList, sList]) => {
+        getSeguro(user.id),
+        getPatente(user.id)
+      ]).then(([vList, cList, mList, aList, mtList, sList, pList]) => {
         if (active) {
           setViajes(vList);
           setCombustibles(cList);
@@ -126,6 +132,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           setAlertas(aList);
           setMonotributos(mtList);
           setSeguros(sList);
+          setPatentes(pList);
         }
       });
     };
@@ -143,6 +150,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
   // Map fechaPago to fecha for compatibility with filterByRange
   const monotributosMapped = monotributos.map(m => ({ ...m, fecha: m.fechaPago }));
   const segurosMapped = seguros.map(s => ({ ...s, fecha: s.fechaPago }));
+  const patentesMapped = patentes.map(p => ({ ...p, fecha: p.fechaPago }));
 
   // Stats calculations
   // Today's Stats
@@ -154,13 +162,15 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
 
   const monotributosHoy = filterByRange<MonotributoRecord & { fecha: string }>(monotributosMapped, 'dia', REFERENCE_DATE);
   const segurosHoy = filterByRange<SeguroRecord & { fecha: string }>(segurosMapped, 'dia', REFERENCE_DATE);
+  const patentesHoy = filterByRange<PatenteRecord & { fecha: string }>(patentesMapped, 'dia', REFERENCE_DATE);
   const totalMonotributoHoy = monotributosHoy.reduce((sum, m) => sum + m.importe, 0);
   const totalSeguroHoy = segurosHoy.reduce((sum, s) => sum + s.importe, 0);
+  const totalPatenteHoy = patentesHoy.reduce((sum, p) => sum + p.importe, 0);
 
   const statsHoy = {
     ...statsHoyBase,
-    gastosTotales: statsHoyBase.gastosTotales + totalMonotributoHoy + totalSeguroHoy,
-    gananciaNeta: statsHoyBase.ingresosTotales - (statsHoyBase.gastosTotales + totalMonotributoHoy + totalSeguroHoy)
+    gastosTotales: statsHoyBase.gastosTotales + totalMonotributoHoy + totalSeguroHoy + totalPatenteHoy,
+    gananciaNeta: statsHoyBase.ingresosTotales - (statsHoyBase.gastosTotales + totalMonotributoHoy + totalSeguroHoy + totalPatenteHoy)
   };
 
   // Month's Stats
@@ -171,13 +181,15 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
 
   const monotributosMes = filterByRange<MonotributoRecord & { fecha: string }>(monotributosMapped, 'mes', REFERENCE_DATE);
   const segurosMes = filterByRange<SeguroRecord & { fecha: string }>(segurosMapped, 'mes', REFERENCE_DATE);
+  const patentesMes = filterByRange<PatenteRecord & { fecha: string }>(patentesMapped, 'mes', REFERENCE_DATE);
   const totalMonotributoMes = monotributosMes.reduce((sum, m) => sum + m.importe, 0);
   const totalSeguroMes = segurosMes.reduce((sum, s) => sum + s.importe, 0);
+  const totalPatenteMes = patentesMes.reduce((sum, p) => sum + p.importe, 0);
 
   const statsMes = {
     ...statsMesBase,
-    gastosTotales: statsMesBase.gastosTotales + totalMonotributoMes + totalSeguroMes,
-    gananciaNeta: statsMesBase.ingresosTotales - (statsMesBase.gastosTotales + totalMonotributoMes + totalSeguroMes)
+    gastosTotales: statsMesBase.gastosTotales + totalMonotributoMes + totalSeguroMes + totalPatenteMes,
+    gananciaNeta: statsMesBase.ingresosTotales - (statsMesBase.gastosTotales + totalMonotributoMes + totalSeguroMes + totalPatenteMes)
   };
 
   // Next Maintenance schedule
@@ -232,11 +244,14 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       const daySeg = seguros
         .filter(s => s.fechaPago === dateStr)
         .reduce((sum, s) => sum + s.importe, 0);
+      const dayPatente = patentes
+        .filter(p => p.fechaPago === dateStr)
+        .reduce((sum, p) => sum + p.importe, 0);
 
       data.push({
         name: dayLabel,
         Ingresos: dayIncomes,
-        Gastos: dayComb + dayMaint + dayMono + daySeg,
+        Gastos: dayComb + dayMaint + dayMono + daySeg + dayPatente,
       });
     }
     return data;
@@ -251,6 +266,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
     { name: 'Taller', value: statsMesBase.gastosMantenimiento },
     { name: 'Monotributo', value: totalMonotributoMes },
     { name: 'Seguro', value: totalSeguroMes },
+    { name: 'Patentes', value: totalPatenteMes },
   ].filter(item => item.value > 0);
 
   const getSliceColor = (name: string) => {
@@ -260,6 +276,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       case 'Taller': return '#0EA5E9'; // Sky-500 (contrasts beautifully with dark backgrounds)
       case 'Monotributo': return '#A855F7'; // Purple-500
       case 'Seguro': return '#EC4899'; // Pink-500
+      case 'Patentes': return '#06B6D4'; // Cyan-500
       default: return '#64748b';
     }
   };
@@ -272,7 +289,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       'Tarjeta de Débito': 0,
       'Tarjeta de Crédito': 0,
       'Transferencia': 0,
-      'App Taxi': 0,
+      'App': 0,
     };
     
     viajesMes.forEach(v => {
@@ -709,19 +726,19 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
               <div 
                 key={alert.id}
                 className={`p-3.5 rounded-xl border flex flex-col justify-between gap-3 text-xs ${
-                  alert.tipo === 'vtv' || alert.tipo === 'seguro' || alert.tipo === 'monotributo'
+                  alert.tipo === 'vtv' || alert.tipo === 'seguro' || alert.tipo === 'monotributo' || alert.tipo === 'patente'
                     ? 'bg-rose-50 border-rose-100 text-rose-800' 
                     : 'bg-yellow-50 border-yellow-100 text-yellow-800'
                 }`}
               >
                 <div className="flex items-start space-x-2">
                   <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${
-                    alert.tipo === 'vtv' || alert.tipo === 'seguro' || alert.tipo === 'monotributo' ? 'text-rose-600' : 'text-yellow-600'
+                    alert.tipo === 'vtv' || alert.tipo === 'seguro' || alert.tipo === 'monotributo' || alert.tipo === 'patente' ? 'text-rose-600' : 'text-yellow-600'
                   }`} />
                   <div>
                     <p className="font-bold leading-relaxed">{alert.mensaje}</p>
                     <div className="flex gap-2 font-mono text-[10px] text-slate-500 mt-1">
-                      <span>{alert.tipo === 'seguro' || alert.tipo === 'vtv' || alert.tipo === 'monotributo' ? 'Vencimiento' : 'Límite'}: {alert.fechaLimite}</span>
+                      <span>{alert.tipo === 'seguro' || alert.tipo === 'vtv' || alert.tipo === 'monotributo' || alert.tipo === 'patente' ? 'Vencimiento' : 'Límite'}: {alert.fechaLimite}</span>
                       {alert.kmLimite && <span>• Km: {alert.kmLimite.toLocaleString()}</span>}
                     </div>
                   </div>
@@ -732,7 +749,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
                 >
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                   <span>
-                    {alert.tipo === 'monotributo' || alert.tipo === 'seguro' ? 'Pagado' : 'Realizado'}
+                    {alert.tipo === 'monotributo' || alert.tipo === 'seguro' || alert.tipo === 'patente' ? 'Pagado' : 'Realizado'}
                   </span>
                 </button>
               </div>
@@ -742,7 +759,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       )}
 
       {/* 4. KPI Scorecards (Today vs Month) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-metrics">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" id="kpi-metrics">
         {/* Card 1: Ingresos */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
@@ -764,28 +781,49 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           </div>
         </div>
 
-        {/* Card 2: Gastos */}
+        {/* Card 2: Combustible */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
-            <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <Compass className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Fuel className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-mono bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full font-bold">GASTOS</span>
+            <span className="text-[10px] font-mono bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">COMBUSTIBLE</span>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-black text-slate-900 font-display">$ {statsMes.gastosTotales.toLocaleString()}</div>
-            <p className="text-slate-400 text-xs mt-1 font-bold">Combustible + Taller</p>
+            <div className="text-2xl font-black text-slate-900 font-display">$ {(statsMesBase.gastosGNC + statsMesBase.gastosNafta).toLocaleString()}</div>
+            <p className="text-slate-400 text-xs mt-1 font-bold">GNC / Nafta</p>
           </div>
           <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400 font-bold">Hoy GNC/Nafta:</span>
             <span className="text-rose-600 font-bold flex items-center">
               <ArrowDownRight className="h-3.5 w-3.5 mr-0.5" />
-              $ {statsHoy.gastosTotales.toLocaleString()}
+              $ {(statsHoyBase.gastosGNC + statsHoyBase.gastosNafta).toLocaleString()}
             </span>
           </div>
         </div>
 
-        {/* Card 3: Ganancia Neta */}
+        {/* Card 3: Taller */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="h-10 w-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+              <Wrench className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] font-mono bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full font-bold">TALLER</span>
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-black text-slate-900 font-display">$ {statsMesBase.gastosMantenimiento.toLocaleString()}</div>
+            <p className="text-slate-400 text-xs mt-1 font-bold">Gastos de Taller</p>
+          </div>
+          <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-xs font-mono">
+            <span className="text-slate-400 font-bold">Hoy Taller:</span>
+            <span className="text-rose-600 font-bold flex items-center">
+              <ArrowDownRight className="h-3.5 w-3.5 mr-0.5" />
+              $ {statsHoyBase.gastosMantenimiento.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: Ganancia Neta */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 pb-6 relative overflow-hidden flex flex-col justify-between h-40 shadow-sm">
           <div className="flex items-start justify-between">
             <div className="h-10 w-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
@@ -896,7 +934,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
             )}
 
             {/* Custom Legend */}
-            <div className="grid grid-cols-5 gap-1 text-[9px] font-mono text-center pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-6 gap-1 text-[9px] font-mono text-center pt-2 border-t border-slate-100">
               <div className="flex flex-col items-center">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mb-0.5"></span>
                 <span className="text-slate-400 truncate w-full" title="GNC">GNC</span>
@@ -914,13 +952,18 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
               </div>
               <div className="flex flex-col items-center">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Monotributo">Monot.</span>
+                <span className="text-slate-400 truncate w-full" title="Monotributo">Mono.</span>
                 <strong className="text-slate-700">${totalMonotributoMes.toLocaleString()}</strong>
               </div>
               <div className="flex flex-col items-center">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-pink-500 mb-0.5"></span>
                 <span className="text-slate-400 truncate w-full" title="Seguro">Seguro</span>
                 <strong className="text-slate-700">${totalSeguroMes.toLocaleString()}</strong>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-cyan-500 mb-0.5"></span>
+                <span className="text-slate-400 truncate w-full" title="Patente">Patente</span>
+                <strong className="text-slate-700">${totalPatenteMes.toLocaleString()}</strong>
               </div>
             </div>
           </div>

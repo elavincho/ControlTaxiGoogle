@@ -1,4 +1,4 @@
-import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, MonotributoRecord, SeguroRecord } from '../types';
+import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, MonotributoRecord, SeguroRecord, PatenteRecord } from '../types';
 
 let isMongoConnected = false;
 
@@ -294,5 +294,39 @@ export async function updateAlerta(alertaId: string, updatedFields: Partial<Aler
 export async function deleteAlerta(alertaId: string, _userId: string): Promise<boolean> {
   const res = await fetch(`/api/alertas/${alertaId}`, { method: 'DELETE' });
   await handleResponse(res, 'Error al eliminar la alerta de la base de datos.');
+  return true;
+}
+
+// --- PATENTES ---
+
+export async function getPatente(userId: string): Promise<PatenteRecord[]> {
+  const res = await fetch(`/api/patente/${userId}`);
+  const list = await handleResponse(res, 'Error al cargar registros de patentes.');
+  return list.map((p: any) => ({ ...p, id: p._id }));
+}
+
+export async function savePatente(recordData: Omit<PatenteRecord, 'id'>): Promise<PatenteRecord> {
+  const res = await fetch('/api/patente', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(recordData)
+  });
+  const created = await handleResponse(res, 'Error al guardar el registro de patente.');
+  return { ...created, id: created._id };
+}
+
+export async function updatePatente(id: string, recordData: Partial<PatenteRecord>, _userId: string): Promise<PatenteRecord> {
+  const res = await fetch(`/api/patente/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(recordData)
+  });
+  const updated = await handleResponse(res, 'Error al actualizar el registro de patente.');
+  return { ...updated, id: updated._id };
+}
+
+export async function deletePatente(id: string, _userId: string): Promise<boolean> {
+  const res = await fetch(`/api/patente/${id}`, { method: 'DELETE' });
+  await handleResponse(res, 'Error al eliminar el registro de patente.');
   return true;
 }

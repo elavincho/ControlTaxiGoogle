@@ -17,6 +17,7 @@ import Resumenes from './components/Resumenes';
 import Perfil from './components/Perfil';
 import Monotributo from './components/Monotributo';
 import Seguro from './components/Seguro';
+import Patentes from './components/Patentes';
 
 import { 
   Car, 
@@ -35,7 +36,8 @@ import {
   Sun,
   Moon,
   Receipt,
-  ShieldCheck
+  ShieldCheck,
+  Coins
 } from 'lucide-react';
 
 export default function App() {
@@ -289,6 +291,8 @@ export default function App() {
         return <Monotributo userId={currentUser.id} />;
       case 'seguro':
         return <Seguro userId={currentUser.id} />;
+      case 'patentes':
+        return <Patentes userId={currentUser.id} />;
       case 'resumenes':
         return <Resumenes userId={currentUser.id} />;
       case 'perfil':
@@ -319,6 +323,7 @@ export default function App() {
     { id: 'mantenimiento', label: 'Mantenimiento', icon: Wrench },
     { id: 'monotributo', label: 'Monotributo AFIP', icon: Receipt },
     { id: 'seguro', label: 'Seguro Automotor', icon: ShieldCheck },
+    { id: 'patentes', label: 'Patentes', icon: Coins },
     { id: 'resumenes', label: 'Auditoría / Resúmenes', icon: CalendarRange },
     { id: 'perfil', label: 'Mi Perfil', icon: UserCircle },
   ];
@@ -331,7 +336,10 @@ export default function App() {
 
       {/* MOBILE HEADER TOP BAR */}
       <header className="md:hidden bg-zinc-950 border-b border-zinc-900 px-4 py-3 flex items-center justify-between z-40 shrink-0 shadow-sm">
-        <div className="flex items-center space-x-2 text-white font-black text-sm font-display uppercase tracking-wider">
+        <button
+          onClick={() => setActiveScreen('dashboard')}
+          className="flex items-center space-x-2 text-white font-black text-sm font-display uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer focus:outline-none"
+        >
           <div className="h-6.5 w-6.5 rounded-md overflow-hidden border border-yellow-400/30 bg-slate-800 shrink-0">
             <img
               src="/assets/images/taxi_dark_gold_1783567838853.jpg"
@@ -341,7 +349,7 @@ export default function App() {
             />
           </div>
           <span>Taxi <span className="text-yellow-400 font-bold">Control</span></span>
-        </div>
+        </button>
         
         <div className="flex items-center space-x-3">
           <button
@@ -408,7 +416,10 @@ export default function App() {
       <aside className="hidden md:flex md:w-64 lg:w-72 bg-zinc-950 border-r border-zinc-900 flex-col shrink-0 z-30 justify-between py-6 px-4 text-white">
         <div className="space-y-6">
           {/* Logo brand */}
-          <div className="flex items-center space-x-3 px-3 text-white font-extrabold text-lg tracking-tight font-display uppercase">
+          <button
+            onClick={() => setActiveScreen('dashboard')}
+            className="flex items-center space-x-3 px-3 text-white font-extrabold text-lg tracking-tight font-display uppercase hover:opacity-90 transition-opacity cursor-pointer text-left w-full focus:outline-none"
+          >
             <div className="h-9.5 w-9.5 rounded-lg overflow-hidden border border-yellow-400/30 bg-slate-800 shrink-0 relative shadow-md shadow-yellow-400/5 flex items-center justify-center">
               <img
                 src="/assets/images/taxi_dark_gold_1783567838853.jpg"
@@ -418,7 +429,7 @@ export default function App() {
               />
             </div>
             <span>Taxi <span className="text-yellow-400">Control</span></span>
-          </div>
+          </button>
 
           {/* Nav List */}
           <nav className="space-y-1.5" id="sidebar-navigation">

@@ -6,6 +6,7 @@ import mantenimientoRoutes from './mantenimientoRoutes';
 import alertasRoutes from './alertasRoutes';
 import monotributoRoutes from './monotributoRoutes';
 import seguroRoutes from './seguroRoutes';
+import patenteRoutes from './patenteRoutes';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/mantenimiento', mantenimientoRoutes);
 router.use('/alertas', alertasRoutes);
 router.use('/monotributo', monotributoRoutes);
 router.use('/seguro', seguroRoutes);
+router.use('/patente', patenteRoutes);
 
 export default router;

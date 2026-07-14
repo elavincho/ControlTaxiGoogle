@@ -27,7 +27,7 @@ export type PaymentMethod =
   | 'Tarjeta de Crédito' 
   | 'Mercado Pago' 
   | 'Transferencia' 
-  | 'App Taxi';
+  | 'App';
 
 export interface Viaje {
   id: string;
@@ -35,6 +35,7 @@ export interface Viaje {
   fecha: string; // YYYY-MM-DD
   formaPago: PaymentMethod;
   monto: number;
+  tipoViaje?: string; // "Taxi (Calle)", "Uber", "Didi", "Cabify", "BA Taxi"
 }
 
 export interface GastoCombustible {
@@ -78,10 +79,21 @@ export interface SeguroRecord {
   aseguradora?: string;
 }
 
+export interface PatenteRecord {
+  id: string;
+  userId: string;
+  fechaPago: string; // YYYY-MM-DD
+  numeroCuota: string;
+  mes: string; // Ej: "MAR/ABR"
+  anio: string; // Ej: "AÑO 2026"
+  importe: number;
+  fechaProximoVencimiento: string; // YYYY-MM-DD
+}
+
 export interface AlertNotification {
   id: string;
   userId: string;
-  tipo: 'mantenimiento' | 'seguro' | 'vtv' | 'otro' | 'monotributo';
+  tipo: 'mantenimiento' | 'seguro' | 'vtv' | 'otro' | 'monotributo' | 'patente';
   mensaje: string;
   fechaLimite: string; // YYYY-MM-DD
   kmLimite?: number;
