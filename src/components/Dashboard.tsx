@@ -266,7 +266,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
     { name: 'Taller', value: statsMesBase.gastosMantenimiento },
     { name: 'Monotributo', value: totalMonotributoMes },
     { name: 'Seguro', value: totalSeguroMes },
-    { name: 'Patentes', value: totalPatenteMes },
+    { name: 'Patente', value: totalPatenteMes },
   ].filter(item => item.value > 0);
 
   const getSliceColor = (name: string) => {
@@ -276,7 +276,7 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
       case 'Taller': return '#0EA5E9'; // Sky-500 (contrasts beautifully with dark backgrounds)
       case 'Monotributo': return '#A855F7'; // Purple-500
       case 'Seguro': return '#EC4899'; // Pink-500
-      case 'Patentes': return '#06B6D4'; // Cyan-500
+      case 'Patente': return '#06B6D4'; // Cyan-500
       default: return '#64748b';
     }
   };
@@ -305,6 +305,50 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
   };
 
   const paymentData = generatePaymentMethodsData();
+
+  // --- CHART 4: TRIP TYPES (TIPO DE VIAJE) ---
+  const generateTripTypesData = () => {
+    const types: Record<string, number> = {
+      'Taxi (Calle)': 0,
+      'Uber': 0,
+      'Didi': 0,
+      'Cabify': 0,
+      'BA Taxi': 0,
+    };
+    
+    viajesMes.forEach(v => {
+      const type = v.tipoViaje || 'Taxi (Calle)';
+      if (types[type] !== undefined) {
+        types[type] += 1;
+      }
+    });
+
+    const totalMonthTrips = viajesMes.length;
+
+    return Object.keys(types).map(key => {
+      const count = types[key];
+      const percentage = totalMonthTrips > 0 ? Math.round((count / totalMonthTrips) * 100) : 0;
+      return {
+        name: key,
+        value: count,
+        percentage: percentage
+      };
+    });
+  };
+
+  const tripTypesData = generateTripTypesData();
+  const activeTripTypesData = tripTypesData.filter(item => item.value > 0);
+
+  const getTripTypeColor = (name: string) => {
+    switch (name) {
+      case 'Taxi (Calle)': return '#F59E0B'; // Amber-500
+      case 'Uber': return '#3B82F6'; // Blue-500
+      case 'Didi': return '#EF4444'; // Red-500 (Didi Warm Orange/Red)
+      case 'Cabify': return '#8B5CF6'; // Purple-500
+      case 'BA Taxi': return '#10B981'; // Emerald-550
+      default: return '#64748b';
+    }
+  };
 
   // Recent activity data
   const recentTrips = [...viajes].sort((a,b) => b.fecha.localeCompare(a.fecha)).slice(0, 5);
@@ -892,116 +936,174 @@ export default function Dashboard({ user, onNavigate, onQuickAction }: Dashboard
           </div>
         </div>
 
-        {/* Column 3: Doughnut Chart (Expenses breakdown) + Payment Method Bar Chart */}
-        <div className="space-y-6 flex flex-col justify-between">
-          {/* Doughnut Chart: Expenses breakdown */}
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex-1 flex flex-col justify-between shadow-sm">
-            <div className="mb-2">
-              <h3 className="font-black text-slate-900 text-base font-display">Desglose de Gastos</h3>
-              <p className="text-xs text-slate-400 font-bold">Distribución de gastos de este mes</p>
+        {/* Column 3: Doughnut Chart (Expenses breakdown) */}
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+          <div className="mb-2">
+            <h3 className="font-black text-slate-900 text-base font-display">Desglose de Gastos</h3>
+            <p className="text-xs text-slate-400 font-bold">Distribución de gastos de este mes</p>
+          </div>
+          
+          {expensesPieData.length > 0 ? (
+            <div className="flex items-center justify-center relative py-2">
+              <div className="w-full h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expensesPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {expensesPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={getSliceColor(entry.name)} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Center text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-mono text-slate-400 font-semibold uppercase">Total</span>
+                <span className="text-sm font-black text-slate-900">${statsMes.gastosTotales.toLocaleString()}</span>
+              </div>
             </div>
-            
-            {expensesPieData.length > 0 ? (
+          ) : (
+            <div className="h-40 flex items-center justify-center text-xs text-slate-400 italic">No hay gastos registrados en el mes.</div>
+          )}
+
+          {/* Custom Legend */}
+          <div className="grid grid-cols-6 gap-1 text-[9px] font-mono text-center pt-2 border-t border-slate-100">
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="GNC">GNC</span>
+              <strong className="text-slate-700">${statsMes.gastosGNC.toLocaleString()}</strong>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="Nafta">Nafta</span>
+              <strong className="text-slate-700">${statsMes.gastosNafta.toLocaleString()}</strong>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="Taller">Taller</span>
+              <strong className="text-slate-700">${statsMes.gastosMantenimiento.toLocaleString()}</strong>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="Monotributo">Mono.</span>
+              <strong className="text-slate-700">${totalMonotributoMes.toLocaleString()}</strong>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-pink-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="Seguro">Seguro</span>
+              <strong className="text-slate-700">${totalSeguroMes.toLocaleString()}</strong>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-cyan-500 mb-0.5"></span>
+              <span className="text-slate-400 truncate w-full" title="Patente">Patente</span>
+              <strong className="text-slate-700">${totalPatenteMes.toLocaleString()}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Secondary Charts (Payment Methods & Trip Types) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6" id="dashboard-charts-row2">
+        {/* Card: Payment Methods */}
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm min-h-[300px]">
+          <div>
+            <h3 className="font-black text-slate-900 text-base font-display">Medios de Pago</h3>
+            <p className="text-xs text-slate-400 font-bold">Monto ingresado por forma de pago este mes</p>
+          </div>
+          
+          {paymentData.length > 0 ? (
+            <div className="flex flex-col flex-1 justify-between mt-3">
+              <div className="w-full h-36">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={paymentData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                    <XAxis type="number" stroke="#64748b" fontSize={9} tickLine={false} />
+                    <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={8.5} width={105} tickLine={false} />
+                    <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                    <Bar dataKey="Monto" fill="#ca8a04" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Detailed Legend containing all descriptions */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[9px] font-mono pt-3 border-t border-slate-100 mt-2">
+                {paymentData.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="text-slate-500 font-bold truncate" title={item.name}>{item.name}:</span>
+                    <strong className="text-yellow-600 shrink-0 font-bold font-mono">${item.Monto.toLocaleString()}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center text-xs text-slate-400 italic">No hay cobros registrados.</div>
+          )}
+        </div>
+
+        {/* Card: Trip Types (Tipo de Viaje) */}
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm min-h-[300px]">
+          <div>
+            <h3 className="font-black text-slate-900 text-base font-display">Distribución por Tipo de Viaje</h3>
+            <p className="text-xs text-slate-400 font-bold">Comparativa y porcentaje de cada tipo de viaje este mes</p>
+          </div>
+
+          {activeTripTypesData.length > 0 ? (
+            <div className="flex flex-col flex-1 justify-between mt-3">
               <div className="flex items-center justify-center relative py-2">
-                <div className="w-full h-40">
+                <div className="w-full h-36">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={expensesPieData}
+                        data={activeTripTypesData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={50}
-                        outerRadius={70}
+                        innerRadius={45}
+                        outerRadius={65}
                         paddingAngle={5}
                         dataKey="value"
                       >
-                        {expensesPieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={getSliceColor(entry.name)} />
+                        {activeTripTypesData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getTripTypeColor(entry.name)} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                      <Tooltip formatter={(val, name, props) => [`${val} viajes (${props.payload.percentage}%)`, 'Cantidad']} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 {/* Center text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-mono text-slate-400 font-semibold uppercase">Total</span>
-                  <span className="text-sm font-black text-slate-900">${statsMes.gastosTotales.toLocaleString()}</span>
+                  <span className="text-[9px] font-mono text-slate-400 font-semibold uppercase">Total Viajes</span>
+                  <span className="text-sm font-black text-slate-900">{viajesMes.length}</span>
                 </div>
               </div>
-            ) : (
-              <div className="h-40 flex items-center justify-center text-xs text-slate-400 italic">No hay gastos registrados en el mes.</div>
-            )}
 
-            {/* Custom Legend */}
-            <div className="grid grid-cols-6 gap-1 text-[9px] font-mono text-center pt-2 border-t border-slate-100">
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="GNC">GNC</span>
-                <strong className="text-slate-700">${statsMes.gastosGNC.toLocaleString()}</strong>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Nafta">Nafta</span>
-                <strong className="text-slate-700">${statsMes.gastosNafta.toLocaleString()}</strong>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Taller">Taller</span>
-                <strong className="text-slate-700">${statsMes.gastosMantenimiento.toLocaleString()}</strong>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Monotributo">Mono.</span>
-                <strong className="text-slate-700">${totalMonotributoMes.toLocaleString()}</strong>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-pink-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Seguro">Seguro</span>
-                <strong className="text-slate-700">${totalSeguroMes.toLocaleString()}</strong>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-cyan-500 mb-0.5"></span>
-                <span className="text-slate-400 truncate w-full" title="Patente">Patente</span>
-                <strong className="text-slate-700">${totalPatenteMes.toLocaleString()}</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Mini Bar Chart: Payment Methods */}
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex-1 flex flex-col justify-between shadow-sm">
-            <div>
-              <h3 className="font-black text-slate-900 text-base font-display">Medios de Pago</h3>
-              <p className="text-xs text-slate-400 font-bold">Monto ingresado por forma de pago</p>
-            </div>
-            
-            {paymentData.length > 0 ? (
-              <div className="flex flex-col flex-1 justify-between">
-                <div className="w-full h-32 mt-3">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={paymentData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                      <XAxis type="number" stroke="#64748b" fontSize={9} tickLine={false} />
-                      <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={8.5} width={105} tickLine={false} />
-                      <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
-                      <Bar dataKey="Monto" fill="#ca8a04" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                {/* Detailed Legend containing all descriptions */}
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[9px] font-mono pt-2 border-t border-slate-100 mt-2">
-                  {paymentData.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
-                      <span className="text-slate-500 font-bold truncate" title={item.name}>{item.name}:</span>
-                      <strong className="text-yellow-600 shrink-0 font-bold">${item.Monto.toLocaleString()}</strong>
+              {/* Detailed Legend containing all descriptions */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[9px] font-mono pt-3 border-t border-slate-100 mt-2">
+                {tripTypesData.map((item, idx) => (
+                  <div key={idx} className="flex items-center space-x-1.5 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span 
+                      className="w-2 h-2 rounded-full shrink-0" 
+                      style={{ backgroundColor: getTripTypeColor(item.name) }}
+                    ></span>
+                    <div className="flex flex-col truncate w-full">
+                      <span className="text-slate-500 font-bold truncate" title={item.name}>{item.name}</span>
+                      <strong className="text-slate-700 font-extrabold font-mono">{item.value} ({item.percentage}%)</strong>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="h-32 flex items-center justify-center text-xs text-slate-400 italic">No hay cobros registrados.</div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center text-xs text-slate-400 italic">No hay viajes registrados en el mes.</div>
+          )}
         </div>
       </div>
 

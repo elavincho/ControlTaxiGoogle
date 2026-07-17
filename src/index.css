@@ -29,7 +29,7 @@
   --border-card-sub: #f1f5f9; /* slate-100 */
   --text-primary: #0f172a; /* slate-900 */
   --text-secondary: #475569; /* slate-600 */
-  --text-muted: #94a3b8; /* slate-400 */
+  --text-muted: #475569; /* slate-600 */
   --bg-input: #ffffff; /* white */
 }
 
@@ -168,6 +168,27 @@ select.bg-slate-50 {
 #applet-viewport .bg-yellow-400\/5,
 .bg-yellow-400\/5 {
   opacity: 0.15;
+}
+
+/* High contrast styles for Uber platform elements depending on the active theme */
+.badge-uber {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #020617 !important;
+}
+
+.progress-uber {
+  background-color: #0f172a !important;
+}
+
+:root:not(.light) .badge-uber {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root:not(.light) .progress-uber {
+  background-color: #1B4079 !important;
 }
 
 /* MOBILE FONT SIZE ENHANCEMENT FOR BETTER VISIBILITY */

@@ -19,27 +19,31 @@ app.use(express.json());
 
 // Ensure Database is connected for each request (crucial for Serverless Vercel warm starts)
 app.use(async (req, res, next) => {
+  // Let health check pass through
+  if (req.path === '/api/health') {
+    return next();
+  }
+
   const mongodbUri = process.env.MONGODB_URI;
   const hasUri = mongodbUri && (mongodbUri.trim().startsWith("mongodb://") || mongodbUri.trim().startsWith("mongodb+srv://"));
 
+  if (!hasUri) {
+    return res.status(500).json({ 
+      error: 'La variable de entorno MONGODB_URI no está configurada. Por favor configúrala en el panel de configuración de AI Studio con tu cadena de conexión (ej. mongodb+srv://...) para poder guardar y sincronizar todos tus datos en MongoDB.' 
+    });
+  }
+
   try {
     await connectDB();
-    // Verify connection state only if a MongoDB URI is configured
-    if (hasUri && mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== 1) {
       throw new Error("La conexión de Mongoose no está activa (readyState: " + mongoose.connection.readyState + ")");
     }
     next();
   } catch (err: any) {
     console.error("Database connection middleware error:", err.message);
-    
-    // On Vercel or Production, fail fast with a highly descriptive error so the user knows what's wrong
-    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-      return res.status(500).json({ 
-        error: `Error de conexión con MongoDB: ${err.message}. Asegúrate de haber configurado la variable de entorno MONGODB_URI en Vercel y de haber habilitado el acceso desde cualquier IP (0.0.0.0/0) en la sección Network Access de MongoDB Atlas.` 
-      });
-    }
-    
-    next();
+    return res.status(500).json({ 
+      error: `Error de conexión con MongoDB: ${err.message}. Asegúrate de haber configurado correctamente tu cadena de conexión en MONGODB_URI y de haber habilitado el acceso desde cualquier dirección IP (0.0.0.0/0) en la sección Network Access de tu cluster de MongoDB Atlas.` 
+    });
   }
 });
 

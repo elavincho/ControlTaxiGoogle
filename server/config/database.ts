@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Disable buffering to fail fast on queries when not connected
+mongoose.set('bufferCommands', false);
+
 let isConnecting = false;
 let lastAttemptTime = 0;
 const RETRY_COOLDOWN_MS = 30000; // 30 seconds cooldown for retrying if connection failed

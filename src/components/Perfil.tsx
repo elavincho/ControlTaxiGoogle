@@ -193,23 +193,6 @@ export default function Perfil({ user, onUserUpdate, onAccountDeleted, onNavigat
     try {
       await deleteUserProfile(user.id);
 
-      // Wipe other data associated with this user locally as well
-      const viajesAll = JSON.parse(localStorage.getItem('taxi_viajes') || '[]');
-      const filteredViajes = viajesAll.filter((v: any) => v.userId !== user.id);
-      localStorage.setItem('taxi_viajes', JSON.stringify(filteredViajes));
-
-      const combAll = JSON.parse(localStorage.getItem('taxi_combustible') || '[]');
-      const filteredComb = combAll.filter((c: any) => c.userId !== user.id);
-      localStorage.setItem('taxi_combustible', JSON.stringify(filteredComb));
-
-      const mantAll = JSON.parse(localStorage.getItem('taxi_mantenimiento') || '[]');
-      const filteredMant = mantAll.filter((m: any) => m.userId !== user.id);
-      localStorage.setItem('taxi_mantenimiento', JSON.stringify(filteredMant));
-
-      const alertsAll = JSON.parse(localStorage.getItem('taxi_alertas') || '[]');
-      const filteredAlerts = alertsAll.filter((a: any) => a.userId !== user.id);
-      localStorage.setItem('taxi_alertas', JSON.stringify(filteredAlerts));
-
       setShowDeleteConfirmModal(false);
       onAccountDeleted(); // Parent will handle logout
     } catch (err: any) {

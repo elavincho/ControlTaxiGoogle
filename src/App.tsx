@@ -43,11 +43,11 @@ import {
 export default function App() {
   // Theme management: defaults to 'dark'
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('taxi_theme') as 'dark' | 'light') || 'dark';
+    return (localStorage.getItem('taxi_theme_v2') as 'dark' | 'light') || 'dark';
   });
 
   useEffect(() => {
-    localStorage.setItem('taxi_theme', theme);
+    localStorage.setItem('taxi_theme_v2', theme);
     if (theme === 'light') {
       document.documentElement.classList.add('light');
     } else {

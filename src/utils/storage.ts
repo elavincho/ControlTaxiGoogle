@@ -3,11 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { UserProfile, Viaje, GastoCombustible, Mantenimiento, AlertNotification, FilterRange, PaymentMethod, MonotributoRecord, SeguroRecord, PatenteRecord } from '../types';
+import { 
+  UserProfile, 
+  Viaje, 
+  GastoCombustible, 
+  Mantenimiento, 
+  AlertNotification, 
+  FilterRange, 
+  MonotributoRecord, 
+  SeguroRecord, 
+  PatenteRecord 
+} from '../types';
 
-// Simple encryption helper (using a custom hash function for secure storage in localStorage)
+// Simple encryption helper (using a custom hash function for secure storage)
 export function encryptPassword(password: string): string {
-  // Simple but secure salt + hashing simulation for storage
   const salt = "taxi_app_salt_2026_";
   let hash = 0;
   const combined = salt + password;
@@ -19,539 +28,59 @@ export function encryptPassword(password: string): string {
   return `tx_${Math.abs(hash).toString(16)}`;
 }
 
-// Initialize Storage if empty
-export function initStorage() {
-  // Bypassed: we no longer store application data in local storage
-}
+// Initialize Storage: Noop (all operations load directly from MongoDB)
+export function initStorage() {}
 
-// Low-level Getters/Setters with Background MongoDB Synchronizer
-
-async function isMongoAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/health');
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data.status === 'ok' && data.mongodb === 'connected';
-  } catch (e) {
-    return false;
-  }
-}
-
-export async function syncViajesToDB(localViajes: Viaje[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/viajes/${userId}`);
-    if (!res.ok) return;
-    const remoteViajes: any[] = await res.json();
-
-    const localIds = new Set(localViajes.map(v => v.id));
-
-    // DELETE remote viajes not present locally
-    for (const remote of remoteViajes) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/viajes/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE remote viajes
-    let localStorageChanged = false;
-    const allViajesFromLocalStorage: Viaje[] = JSON.parse(localStorage.getItem('taxi_viajes') || '[]');
-
-    for (const local of localViajes) {
-      const match = remoteViajes.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            fecha: local.fecha,
-            formaPago: local.formaPago,
-            monto: local.monto
-          };
-          const createRes = await fetch('/api/viajes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allViajesFromLocalStorage.findIndex(v => v.id === local.id);
-            if (idx !== -1) {
-              allViajesFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (match.fecha !== local.fecha || match.formaPago !== local.formaPago || match.monto !== local.monto) {
-          await fetch(`/api/viajes/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fecha: local.fecha,
-              formaPago: local.formaPago,
-              monto: local.monto
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_viajes', JSON.stringify(allViajesFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing viajes:", err);
-  }
-}
-
-export async function syncCombustibleToDB(localCombustibles: GastoCombustible[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/combustible/${userId}`);
-    if (!res.ok) return;
-    const remoteCombustibles: any[] = await res.json();
-
-    const localIds = new Set(localCombustibles.map(c => c.id));
-
-    // DELETE remote
-    for (const remote of remoteCombustibles) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/combustible/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE
-    let localStorageChanged = false;
-    const allCombFromLocalStorage: GastoCombustible[] = JSON.parse(localStorage.getItem('taxi_combustible') || '[]');
-
-    for (const local of localCombustibles) {
-      const match = remoteCombustibles.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            fecha: local.fecha,
-            importe: local.importe,
-            nota: local.nota,
-            tipo: local.tipo
-          };
-          const createRes = await fetch('/api/combustible', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allCombFromLocalStorage.findIndex(c => c.id === local.id);
-            if (idx !== -1) {
-              allCombFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (match.fecha !== local.fecha || match.importe !== local.importe || match.nota !== local.nota || match.tipo !== local.tipo) {
-          await fetch(`/api/combustible/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fecha: local.fecha,
-              importe: local.importe,
-              nota: local.nota,
-              tipo: local.tipo
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_combustible', JSON.stringify(allCombFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing combustibles:", err);
-  }
-}
-
-export async function syncMantenimientoToDB(localMantenimientos: Mantenimiento[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/mantenimiento/${userId}`);
-    if (!res.ok) return;
-    const remoteMaints: any[] = await res.json();
-
-    const localIds = new Set(localMantenimientos.map(m => m.id));
-
-    // DELETE remote
-    for (const remote of remoteMaints) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/mantenimiento/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE
-    let localStorageChanged = false;
-    const allMaintFromLocalStorage: Mantenimiento[] = JSON.parse(localStorage.getItem('taxi_mantenimiento') || '[]');
-
-    for (const local of localMantenimientos) {
-      const match = remoteMaints.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            fecha: local.fecha,
-            tipoMantenimiento: local.tipoMantenimiento,
-            descripcion: local.descripcion,
-            importe: local.importe,
-            kilometrajeActual: local.kilometrajeActual,
-            proximoSugeridoKilometraje: local.proximoSugeridoKilometraje,
-            proximoSugeridaFecha: local.proximoSugeridaFecha,
-            taller: local.taller,
-            nroFactura: local.nroFactura
-          };
-          const createRes = await fetch('/api/mantenimiento', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allMaintFromLocalStorage.findIndex(m => m.id === local.id);
-            if (idx !== -1) {
-              allMaintFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (
-          match.fecha !== local.fecha ||
-          match.tipoMantenimiento !== local.tipoMantenimiento ||
-          match.descripcion !== local.descripcion ||
-          match.importe !== local.importe ||
-          match.kilometrajeActual !== local.kilometrajeActual ||
-          match.proximoSugeridoKilometraje !== local.proximoSugeridoKilometraje ||
-          match.proximoSugeridaFecha !== local.proximoSugeridaFecha ||
-          match.taller !== local.taller ||
-          match.nroFactura !== local.nroFactura
-        ) {
-          await fetch(`/api/mantenimiento/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fecha: local.fecha,
-              tipoMantenimiento: local.tipoMantenimiento,
-              descripcion: local.descripcion,
-              importe: local.importe,
-              kilometrajeActual: local.kilometrajeActual,
-              proximoSugeridoKilometraje: local.proximoSugeridoKilometraje,
-              proximoSugeridaFecha: local.proximoSugeridaFecha,
-              taller: local.taller,
-              nroFactura: local.nroFactura
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_mantenimiento', JSON.stringify(allMaintFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing mantenimientos:", err);
-  }
-}
-
-export async function syncAlertasToDB(localAlertas: AlertNotification[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/alertas/${userId}`);
-    if (!res.ok) return;
-    const remoteAlertas: any[] = await res.json();
-
-    const localIds = new Set(localAlertas.map(a => a.id));
-
-    // DELETE remote
-    for (const remote of remoteAlertas) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/alertas/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE
-    let localStorageChanged = false;
-    const allAlertsFromLocalStorage: AlertNotification[] = JSON.parse(localStorage.getItem('taxi_alertas') || '[]');
-
-    for (const local of localAlertas) {
-      const match = remoteAlertas.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            tipo: local.tipo,
-            mensaje: local.mensaje,
-            fechaLimite: local.fechaLimite,
-            kmLimite: local.kmLimite,
-            resuelta: local.resuelta
-          };
-          const createRes = await fetch('/api/alertas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allAlertsFromLocalStorage.findIndex(a => a.id === local.id);
-            if (idx !== -1) {
-              allAlertsFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (
-          match.tipo !== local.tipo ||
-          match.mensaje !== local.mensaje ||
-          match.fechaLimite !== local.fechaLimite ||
-          match.kmLimite !== local.kmLimite ||
-          match.resuelta !== local.resuelta
-        ) {
-          await fetch(`/api/alertas/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              tipo: local.tipo,
-              mensaje: local.mensaje,
-              fechaLimite: local.fechaLimite,
-              kmLimite: local.kmLimite,
-              resuelta: local.resuelta
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_alertas', JSON.stringify(allAlertsFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing alertas:", err);
-  }
-}
-
-export async function syncMonotributoToDB(localMonotributos: MonotributoRecord[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/monotributo/${userId}`);
-    if (!res.ok) return;
-    const remoteRecords: any[] = await res.json();
-
-    const localIds = new Set(localMonotributos.map(m => m.id));
-
-    // DELETE remote
-    for (const remote of remoteRecords) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/monotributo/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE
-    let localStorageChanged = false;
-    const allFromLocalStorage: MonotributoRecord[] = JSON.parse(localStorage.getItem('taxi_monotributo') || '[]');
-
-    for (const local of localMonotributos) {
-      const match = remoteRecords.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            fechaPago: local.fechaPago,
-            importe: local.importe,
-            categoria: local.categoria,
-            fechaVencimiento: local.fechaVencimiento
-          };
-          const createRes = await fetch('/api/monotributo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allFromLocalStorage.findIndex(m => m.id === local.id);
-            if (idx !== -1) {
-              allFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (
-          match.fechaPago !== local.fechaPago ||
-          match.importe !== local.importe ||
-          match.categoria !== local.categoria ||
-          match.fechaVencimiento !== local.fechaVencimiento
-        ) {
-          await fetch(`/api/monotributo/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fechaPago: local.fechaPago,
-              importe: local.importe,
-              categoria: local.categoria,
-              fechaVencimiento: local.fechaVencimiento
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_monotributo', JSON.stringify(allFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing monotributo:", err);
-  }
-}
-
-export async function syncSeguroToDB(localSeguros: SeguroRecord[], userId: string) {
-  if (!(await isMongoAvailable())) return;
-  try {
-    const res = await fetch(`/api/seguro/${userId}`);
-    if (!res.ok) return;
-    const remoteRecords: any[] = await res.json();
-
-    const localIds = new Set(localSeguros.map(s => s.id));
-
-    // DELETE remote
-    for (const remote of remoteRecords) {
-      if (!localIds.has(remote._id)) {
-        await fetch(`/api/seguro/${remote._id}`, { method: 'DELETE' });
-      }
-    }
-
-    // CREATE or UPDATE
-    let localStorageChanged = false;
-    const allFromLocalStorage: SeguroRecord[] = JSON.parse(localStorage.getItem('taxi_seguro') || '[]');
-
-    for (const local of localSeguros) {
-      const match = remoteRecords.find(r => r._id === local.id);
-      if (!match) {
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(local.id);
-        if (!isMongoId) {
-          const payload = {
-            userId,
-            fechaPago: local.fechaPago,
-            importe: local.importe,
-            fechaVencimiento: local.fechaVencimiento,
-            aseguradora: local.aseguradora
-          };
-          const createRes = await fetch('/api/seguro', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (createRes.ok) {
-            const created = await createRes.json();
-            const idx = allFromLocalStorage.findIndex(s => s.id === local.id);
-            if (idx !== -1) {
-              allFromLocalStorage[idx].id = created._id;
-              localStorageChanged = true;
-            }
-          }
-        }
-      } else {
-        if (
-          match.fechaPago !== local.fechaPago ||
-          match.importe !== local.importe ||
-          match.fechaVencimiento !== local.fechaVencimiento ||
-          match.aseguradora !== local.aseguradora
-        ) {
-          await fetch(`/api/seguro/${match._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fechaPago: local.fechaPago,
-              importe: local.importe,
-              fechaVencimiento: local.fechaVencimiento,
-              aseguradora: local.aseguradora
-            })
-          });
-        }
-      }
-    }
-
-    if (localStorageChanged) {
-      localStorage.setItem('taxi_seguro', JSON.stringify(allFromLocalStorage));
-      window.dispatchEvent(new Event('storage-update'));
-    }
-  } catch (err) {
-    console.error("Failed syncing seguro:", err);
-  }
-}
-
-export async function syncFromDBToLocalStorage(userId: string) {
-  // Bypassed: all operations load directly from the database API
-}
-
-// Low-level Getters/Setters
+// Low-level Getters/Setters (stubs returning empty values to prevent any local storage persistence)
 export function getStoredUsers(): UserProfile[] {
   return [];
 }
 
-export function saveStoredUsers(users: UserProfile[]) {}
+export function saveStoredUsers(_users: UserProfile[]) {}
 
-export function getStoredViajes(userId: string): Viaje[] {
+export function getStoredViajes(_userId: string): Viaje[] {
   return [];
 }
 
-export function saveStoredViajes(viajes: Viaje[], userId: string) {}
+export function saveStoredViajes(_viajes: Viaje[], _userId: string) {}
 
-export function getStoredCombustible(userId: string): GastoCombustible[] {
+export function getStoredCombustible(_userId: string): GastoCombustible[] {
   return [];
 }
 
-export function saveStoredCombustible(combustible: GastoCombustible[], userId: string) {}
+export function saveStoredCombustible(_combustible: GastoCombustible[], _userId: string) {}
 
-export function getStoredMantenimiento(userId: string): Mantenimiento[] {
+export function getStoredMantenimiento(_userId: string): Mantenimiento[] {
   return [];
 }
 
-export function saveStoredMantenimiento(mantenimiento: Mantenimiento[], userId: string) {}
+export function saveStoredMantenimiento(_mantenimiento: Mantenimiento[], _userId: string) {}
 
-export function getStoredAlertas(userId: string): AlertNotification[] {
+export function getStoredAlertas(_userId: string): AlertNotification[] {
   return [];
 }
 
-export function saveStoredAlertas(alertas: AlertNotification[], userId: string) {}
+export function saveStoredAlertas(_alertas: AlertNotification[], _userId: string) {}
 
-export function getStoredMonotributo(userId: string): MonotributoRecord[] {
+export function getStoredMonotributo(_userId: string): MonotributoRecord[] {
   return [];
 }
 
-export function saveStoredMonotributo(records: MonotributoRecord[], userId: string) {}
+export function saveStoredMonotributo(_records: MonotributoRecord[], _userId: string) {}
 
-export function getStoredSeguro(userId: string): SeguroRecord[] {
+export function getStoredSeguro(_userId: string): SeguroRecord[] {
   return [];
 }
 
-export function saveStoredSeguro(records: SeguroRecord[], userId: string) {}
+export function saveStoredSeguro(_records: SeguroRecord[], _userId: string) {}
 
-export function getStoredPatente(userId: string): PatenteRecord[] {
+export function getStoredPatente(_userId: string): PatenteRecord[] {
   return [];
 }
 
-export function saveStoredPatente(records: PatenteRecord[], userId: string) {}
+export function saveStoredPatente(_records: PatenteRecord[], _userId: string) {}
 
+// Date and Filtering Helpers (essential for dashboard calculations and view filtering)
 export function getTodayDateString(): string {
   const today = new Date();
   const year = today.getFullYear();
@@ -571,12 +100,10 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
-// Date helpers for filtering
 export function isDateInCurrentWeek(dateStr: string, referenceDateStr?: string): boolean {
   const refDate = parseLocalDate(referenceDateStr || getTodayDateString());
   const targetDate = parseLocalDate(dateStr);
   
-  // Get start and end of week for reference date
   const day = refDate.getDay();
   const diff = refDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
   
@@ -620,7 +147,7 @@ export function filterByRange<T extends { fecha: string }>(
   });
 }
 
-// Stat Calculations
+// Stat Calculations for Dashboard
 export interface SummaryStats {
   ingresosTotales: number;
   gastosGNC: number;
@@ -641,12 +168,11 @@ export function calculateSummary(
 ): SummaryStats {
   const ingresosTotales = viajes.reduce((sum, v) => sum + v.monto, 0);
   
-  const combustiblesFiltrados = combustibles;
-  const gastosGNC = combustiblesFiltrados
+  const gastosGNC = combustibles
     .filter(c => c.tipo === 'GNC')
     .reduce((sum, c) => sum + c.importe, 0);
     
-  const gastosNafta = combustiblesFiltrados
+  const gastosNafta = combustibles
     .filter(c => c.tipo === 'Nafta')
     .reduce((sum, c) => sum + c.importe, 0);
 
